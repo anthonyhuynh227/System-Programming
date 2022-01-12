@@ -1,38 +1,14 @@
 #include <stdio.h>
 #include <inttypes.h>
-#include <stdint.h>
 #include <stdlib.h>
 
-void DumpBytes(void *pData, uint32_t byteLen) {
-  uint8_t* ptr = (unsigned char*)pData;
+// Copyright 2022 Bunnell, Huynh
+// Isabella Bunnell - ibunnell@uw.edu
+// Phuoc Huynh - phuynh08@uw.edu
 
-  if ( ptr == NULL ) printf("%s",ptr);
-
-  printf("The %u bytes starting at 0x%"PRIxPTR " are:",
-              byteLen, (uintptr_t)ptr);
-  while (byteLen-- > 0) {
-    printf(" %02x", *ptr++);
-  }
-  printf("\n");
-}
-
-int CopyAndSort(uint8_t *source, uint8_t *dest, uint32_t len) {
-  DumpBytes(source, sizeof(source));
-  int i, j;
-  if ( source == NULL || dest == NULL ) return 1;
-
-  // Insertion sort
-  for (i = 0; i < len; i++) {
-      dest[i] = source[i];
-      j = i -1;
-      while ( j >= 0 && dest[j] > source[i]) {
-           dest[j+1] = dest[j];
-	   dest[j] = source[i];
-	   j = j-1;
-      }
-  }
-  return 0;
-}
+void DumpBytes(void* pData, int byteLen);
+int CopyAndSort(uint8_t arr1[], uint8_t arr2[], int arrSize);
+int InsertionSort(uint8_t arr[], int arrSize);
 
 int main(int argc, char* argv[]) {
   int32_t int_val = 1;
@@ -44,7 +20,60 @@ int main(int argc, char* argv[]) {
   DumpBytes(&float_val, sizeof(float_val));
   DumpBytes(arr_unsorted, sizeof(arr_unsorted));
   CopyAndSort(arr_unsorted, arr_sorted, sizeof(arr_unsorted));
-  DumpBytes(arr_sorted, sizeof(arr_sorted));
-  
+  DumpBytes(arr_sorted, sizeof(arr_unsorted));
+
   return EXIT_SUCCESS;
 }
+
+void DumpBytes(void* pData, int32_t byteLen) {
+  if (byteLen < 0 || pData == NULL) {
+       exit(-1);
+    }
+    // cast pData to type that takes each byte as one array entry
+    uint8_t* ptr = (uint8_t*) pData;
+    printf("The %d bytes starting at %p are:", byteLen, pData);
+
+    int counter = 1;
+    uint8_t byte;
+    while (counter <= byteLen) {
+        byte = *(ptr++);
+        printf(" %02x", byte);
+        counter++;
+    }
+
+    printf("\n");
+}
+
+int CopyAndSort(uint8_t arr1[], uint8_t arr2[], int arrSize) {
+    if (arr1 == NULL || arr2 == NULL || arrSize < 0) {
+        return EXIT_FAILURE;
+    }
+
+    DumpBytes(arr1, sizeof(uint8_t));
+    InsertionSort(arr1, arrSize);
+    // Copy array
+    for (int i = 0; i < arrSize; i++) {
+        arr2[i] = arr1[i];
+    }
+
+    return EXIT_SUCCESS;
+}
+
+int InsertionSort(uint8_t arr[], int arrSize) {
+    if (arr == NULL || arrSize < 0) {
+        return EXIT_FAILURE;
+    }
+
+    int i, j, compare;
+    for (i = 1; i < arrSize; i++) {
+        compare = arr[i];
+        j = i - 1;
+        while (j >= 0 && arr[j] > compare) {
+            arr[j + 1] = arr[j];
+            j = j - 1;
+        }
+        arr[j + 1] = compare;
+    }
+    return EXIT_SUCCESS;
+}
+
