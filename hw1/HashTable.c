@@ -139,14 +139,9 @@ bool KeyExistsInChain(LinkedList *chain,
   Verify333(iter != NULL);
   Verify333(LLIterator_IsValid(iter));
   do
-  {
-    // LLPayload_t *payload = (LLPayload_t *)malloc(sizeof(LLPayload_t *));
-    // LLIterator_Get(iter, &payload);
-    // get the current Node in LinkedList
-
+  { // get the current Node in LinkedList
     HTKeyValue_t *currentNode;
     LLIterator_Get(iter, (LLPayload_t *)&currentNode);
-    // HTKeyValue_t *currentNode = (HTKeyValue_t *)payload;
     if (newkeyvalue.key == currentNode->key)
     {
       // return the old (key-value) pair to oldkeyvalue pointer.
@@ -355,9 +350,10 @@ bool HTIterator_Next(HTIterator *iter)
   }
 
   // go to next bucket to check if there is element in it.
+  LLIterator_Free(iter->bucket_it);
   while (iter->bucket_idx < table->num_buckets - 1)
   {
-    LLIterator_Free(iter->bucket_it);
+    // LLIterator_Free(iter->bucket_it);
     iter->bucket_idx += 1;
     if (LinkedList_NumElements(table->buckets[iter->bucket_idx]) > 0)
     {
@@ -365,9 +361,9 @@ bool HTIterator_Next(HTIterator *iter)
       return true;
     }
   }
-  // iter->bucket_it = NULL;
-  LLIterator_Free(iter->bucket_it);
-  HTIterator_Free(iter);
+  iter->bucket_it = NULL;
+  // LLIterator_Free(iter->bucket_it);
+  // HTIterator_Free(iter);
   return false;
 }
 
@@ -380,7 +376,10 @@ bool HTIterator_Get(HTIterator *iter, HTKeyValue_t *keyvalue)
   {
     return false;
   }
-  LLIterator_Get(iter->bucket_it, (LLPayload_t *)&keyvalue);
+  LLPayload_t curr;
+  LLIterator_Get(iter->bucket_it, &curr);
+  // cast curr to HTKeyValue_t
+  *keyvalue = *((HTKeyValue_t *)curr);
   return true;
 }
 
