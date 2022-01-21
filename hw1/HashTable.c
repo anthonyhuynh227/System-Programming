@@ -26,56 +26,60 @@
 // factor has become too high.
 static void MaybeResize(HashTable *ht);
 
-int HashKeyToBucketNum(HashTable *ht, HTKey_t key) {
+int HashKeyToBucketNum(HashTable *ht, HTKey_t key)
+{
   return key % ht->num_buckets;
 }
 
 // Deallocation functions that do nothing.  Useful if we want to deallocate
 // the structure (eg, the linked list) without deallocating its elements or
 // if we know that the structure is empty.
-static void LLNoOpFree(LLPayload_t freeme) { }
-static void HTNoOpFree(HTValue_t freeme) { }
-
+static void LLNoOpFree(LLPayload_t freeme) {}
+static void HTNoOpFree(HTValue_t freeme) {}
 
 ///////////////////////////////////////////////////////////////////////////////
 // HashTable implementation.
 
-HTKey_t FNVHash64(unsigned char *buffer, int len) {
+HTKey_t FNVHash64(unsigned char *buffer, int len)
+{
   // This code is adapted from code by Landon Curt Noll
   // and Bonelli Nicola:
   //     http://code.google.com/p/nicola-bonelli-repo/
   static const uint64_t FNV1_64_INIT = 0xcbf29ce484222325ULL;
   static const uint64_t FNV_64_PRIME = 0x100000001b3ULL;
-  unsigned char *bp = (unsigned char *) buffer;
+  unsigned char *bp = (unsigned char *)buffer;
   unsigned char *be = bp + len;
   uint64_t hval = FNV1_64_INIT;
 
   // FNV-1a hash each octet of the buffer.
-  while (bp < be) {
+  while (bp < be)
+  {
     // XOR the bottom with the current octet.
-    hval ^= (uint64_t) * bp++;
+    hval ^= (uint64_t)*bp++;
     // Multiply by the 64 bit FNV magic prime mod 2^64.
     hval *= FNV_64_PRIME;
   }
   return hval;
 }
 
-HashTable* HashTable_Allocate(int num_buckets) {
+HashTable *HashTable_Allocate(int num_buckets)
+{
   HashTable *ht;
   int i;
 
   Verify333(num_buckets > 0);
 
   // Allocate the hash table record.
-  ht = (HashTable *) malloc(sizeof(HashTable));
+  ht = (HashTable *)malloc(sizeof(HashTable));
   Verify333(ht != NULL);
 
   // Initialize the record.
   ht->num_buckets = num_buckets;
   ht->num_elements = 0;
-  ht->buckets = (LinkedList **) malloc(num_buckets * sizeof(LinkedList *));
+  ht->buckets = (LinkedList **)malloc(num_buckets * sizeof(LinkedList *));
   Verify333(ht->buckets != NULL);
-  for (i = 0; i < num_buckets; i++) {
+  for (i = 0; i < num_buckets; i++)
+  {
     ht->buckets[i] = LinkedList_Allocate();
   }
 
@@ -83,13 +87,15 @@ HashTable* HashTable_Allocate(int num_buckets) {
 }
 
 void HashTable_Free(HashTable *table,
-                    ValueFreeFnPtr value_free_function) {
+                    ValueFreeFnPtr value_free_function)
+{
   int i;
 
   Verify333(table != NULL);
 
   // Free each bucket's chain.
-  for (i = 0; i < table->num_buckets; i++) {
+  for (i = 0; i < table->num_buckets; i++)
+  {
     LinkedList *bucket = table->buckets[i];
     HTKeyValue_t *kv;
 
@@ -97,7 +103,8 @@ void HashTable_Free(HashTable *table,
     // call to LinkedList_Free since we need to use the passed-in
     // value_free_function -- which takes a HTValue_t, not an LLPayload_t -- to
     // free the caller's memory.
-    while (LinkedList_NumElements(bucket) > 0) {
+    while (LinkedList_NumElements(bucket) > 0)
+    {
       Verify333(LinkedList_Pop(bucket, (LLPayload_t *)&kv));
       value_free_function(kv->value);
       free(kv);
@@ -112,47 +119,51 @@ void HashTable_Free(HashTable *table,
   free(table);
 }
 
-int HashTable_NumElements(HashTable *table) {
+int HashTable_NumElements(HashTable *table)
+{
   Verify333(table != NULL);
   return table->num_elements;
 }
 
-// helper function that will free node from LL
-void LL_Free(LLPayload_t payload) {
-  Verify333(payload != NULL);
-  free(payload);
-}
-
-
-// this is the helper function defined in step 1 
+// this is the helper function defined in step 1
 // it take in a list and will iterate thru the list.
 // If it find the Key in the list, it will be replace with
-// new value and return true. 
-bool KeyExistsInChain(LinkedList* chain, 
-                      HTKeyValue_t newkeyvalue, 
-                      HTKeyValue_t *oldkeyvalue, bool swap, bool delete) {
+// new value and return true.
+bool KeyExistsInChain(LinkedList *chain,
+                      HTKeyValue_t newkeyvalue,
+                      HTKeyValue_t *oldkeyvalue, bool swap, bool delete)
+{
   // initialize the iterator
   LLIterator *iter = LLIterator_Allocate(chain);
   Verify333(chain != NULL);
   Verify333(iter != NULL);
   Verify333(LLIterator_IsValid(iter));
-  do {
-    LLPayload_t* payload = NULL;
-    LLIterator_Get(iter, payload);
+  do
+  {
+    // LLPayload_t *payload = (LLPayload_t *)malloc(sizeof(LLPayload_t *));
+    // LLIterator_Get(iter, &payload);
     // get the current Node in LinkedList
-    HTKeyValue_t* currentNode = (HTKeyValue_t*) payload;
-    if (newkeyvalue.key == currentNode->key && swap && !delete) {
+
+    HTKeyValue_t *currentNode;
+    LLIterator_Get(iter, (LLPayload_t *)&currentNode);
+    // HTKeyValue_t *currentNode = (HTKeyValue_t *)payload;
+    if (newkeyvalue.key == currentNode->key)
+    {
       // return the old (key-value) pair to oldkeyvalue pointer.
-      oldkeyvalue->value = currentNode->value;
-      oldkeyvalue->key = newkeyvalue.key;
+      *oldkeyvalue = *currentNode;
       // for Insert method
-      if (swap && !delete) {
+      if (swap && !delete)
+      {
         currentNode->value = newkeyvalue.value;
         return true;
-      } else if (!swap && !delete) {  // for find method
+      }
+      else if (!swap && !delete)
+      { // for find method
         return true;
-      } else if (!swap && delete) {   // for remove method
-        LLIterator_Remove(iter, &LL_Free);
+      }
+      else if (!swap && delete)
+      { // for remove method
+        LLIterator_Remove(iter, LLNoOpFree);
         return true;
       }
     }
@@ -163,7 +174,8 @@ bool KeyExistsInChain(LinkedList* chain,
 
 bool HashTable_Insert(HashTable *table,
                       HTKeyValue_t newkeyvalue,
-                      HTKeyValue_t *oldkeyvalue) {
+                      HTKeyValue_t *oldkeyvalue)
+{
   int bucket;
   LinkedList *chain;
 
@@ -173,18 +185,21 @@ bool HashTable_Insert(HashTable *table,
   // Calculate which bucket and chain we're inserting into.
   bucket = HashKeyToBucketNum(table, newkeyvalue.key);
   chain = table->buckets[bucket];
-
+  Verify333(chain != NULL);
   // STEP 1: finish the implementation of InsertHashTable.
   // This is a fairly complex task, so you might decide you want
   // to define/implement a helper function that helps you find
   // and optionally remove a key within a chain, rather than putting
   // all that logic inside here.  You might also find that your helper
   // can be reused in steps 2 and 3.
-  if (KeyExistsInChain(chain,newkeyvalue,oldkeyvalue,true,false)) {
+  if (LinkedList_NumElements(chain) > 0 && KeyExistsInChain(chain, newkeyvalue, oldkeyvalue, true, false))
+  {
     return true;
-  } else {
+  }
+  else
+  {
     // alocate space for new key-value pair
-    HTKeyValue_t* new_node = (HTKeyValue_t*) malloc(sizeof(HTKeyValue_t));
+    HTKeyValue_t *new_node = (HTKeyValue_t *)malloc(sizeof(HTKeyValue_t));
     // OOM error
     Verify333(new_node != NULL);
     new_node->key = newkeyvalue.key;
@@ -195,12 +210,12 @@ bool HashTable_Insert(HashTable *table,
     //    existing (key,value) with that key.
     return false;
   }
-  
 }
 
 bool HashTable_Find(HashTable *table,
                     HTKey_t key,
-                    HTKeyValue_t *keyvalue) {
+                    HTKeyValue_t *keyvalue)
+{
   Verify333(table != NULL);
 
   // STEP 2: implement HashTable_Find.
@@ -213,13 +228,16 @@ bool HashTable_Find(HashTable *table,
   bucket = HashKeyToBucketNum(table, key);
   chain = table->buckets[bucket];
   // create space for new keyvalue to pass in KeyExistsInChain
-  HTKeyValue_t* newKeyValue = (HTKeyValue_t*) malloc(sizeof(HTKeyValue_t));
+  HTKeyValue_t *newKeyValue = (HTKeyValue_t *)malloc(sizeof(HTKeyValue_t));
   newKeyValue->key = key;
   newKeyValue->value = 0;
-  if (KeyExistsInChain(chain, *newKeyValue, keyvalue, false,false )) {
+  if (LinkedList_NumElements(chain) > 0 && KeyExistsInChain(chain, *newKeyValue, keyvalue, false, false))
+  {
     free(newKeyValue);
     return true;
-  } else {
+  }
+  else
+  {
     free(newKeyValue);
     return false;
   }
@@ -227,7 +245,8 @@ bool HashTable_Find(HashTable *table,
 
 bool HashTable_Remove(HashTable *table,
                       HTKey_t key,
-                      HTKeyValue_t *keyvalue) {
+                      HTKeyValue_t *keyvalue)
+{
   Verify333(table != NULL);
 
   // STEP 3: implement HashTable_Remove.
@@ -240,13 +259,16 @@ bool HashTable_Remove(HashTable *table,
   bucket = HashKeyToBucketNum(table, key);
   chain = table->buckets[bucket];
 
-  HTKeyValue_t* newKeyValue = (HTKeyValue_t*) malloc(sizeof(HTKeyValue_t));
+  HTKeyValue_t *newKeyValue = (HTKeyValue_t *)malloc(sizeof(HTKeyValue_t));
   newKeyValue->key = key;
   newKeyValue->value = 0;
-  if (KeyExistsInChain(chain, *newKeyValue, keyvalue, false,true)) {
+  if (LinkedList_NumElements(chain) > 0 && KeyExistsInChain(chain, *newKeyValue, keyvalue, false, true))
+  {
     table->num_elements -= 1;
     return true;
-  } else {
+  }
+  else
+  {
     return false;
   }
 }
@@ -254,18 +276,20 @@ bool HashTable_Remove(HashTable *table,
 ///////////////////////////////////////////////////////////////////////////////
 // HTIterator implementation.
 
-HTIterator* HTIterator_Allocate(HashTable *table) {
+HTIterator *HTIterator_Allocate(HashTable *table)
+{
   HTIterator *iter;
-  int         i;
+  int i;
 
   Verify333(table != NULL);
 
-  iter = (HTIterator *) malloc(sizeof(HTIterator));
+  iter = (HTIterator *)malloc(sizeof(HTIterator));
   Verify333(iter != NULL);
 
   // If the hash table is empty, the iterator is immediately invalid,
   // since it can't point to anything.
-  if (table->num_elements == 0) {
+  if (table->num_elements == 0)
+  {
     iter->ht = table;
     iter->bucket_it = NULL;
     iter->bucket_idx = INVALID_IDX;
@@ -275,76 +299,100 @@ HTIterator* HTIterator_Allocate(HashTable *table) {
   // Initialize the iterator.  There is at least one element in the
   // table, so find the first element and point the iterator at it.
   iter->ht = table;
-  for (i = 0; i < table->num_buckets; i++) {
-    if (LinkedList_NumElements(table->buckets[i]) > 0) {
+  for (i = 0; i < table->num_buckets; i++)
+  {
+    if (LinkedList_NumElements(table->buckets[i]) > 0)
+    {
       iter->bucket_idx = i;
       break;
     }
   }
-  Verify333(i < table->num_buckets);  // make sure we found it.
+  Verify333(i < table->num_buckets); // make sure we found it.
   iter->bucket_it = LLIterator_Allocate(table->buckets[iter->bucket_idx]);
   return iter;
 }
 
-void HTIterator_Free(HTIterator *iter) {
+void HTIterator_Free(HTIterator *iter)
+{
   Verify333(iter != NULL);
-  if (iter->bucket_it != NULL) {
+  if (iter->bucket_it != NULL)
+  {
     LLIterator_Free(iter->bucket_it);
     iter->bucket_it = NULL;
   }
   free(iter);
 }
 
-bool HTIterator_IsValid(HTIterator *iter) {
+bool HTIterator_IsValid(HTIterator *iter)
+{
   Verify333(iter != NULL);
-  Verify333(iter->bucket_it != NULL);
+  // Verify333(iter->bucket_it != NULL);
   Verify333(iter->ht != NULL);
   // STEP 4: implement HTIterator_IsValid.
+  if (iter->bucket_it == NULL)
+  {
+    return false;
+  }
 
   return (LLIterator_IsValid(iter->bucket_it));
 }
 
-bool HTIterator_Next(HTIterator *iter) {
+bool HTIterator_Next(HTIterator *iter)
+{
   Verify333(iter != NULL);
-  Verify333(HTIterator_IsValid(iter));
   // STEP 5: implement HTIterator_Next.
   // check wheter there is next element in LinkedList
   // If not, go to next bucket until there is no bucket in table.
-  HashTable *table = iter->ht;
-  if (LLIterator_Next(iter->bucket_it)) {
-      return true;
+  if (!HTIterator_IsValid(iter))
+  {
+    return false;
   }
-  while (iter->bucket_idx < table->num_buckets -1) {
+  HashTable *table = iter->ht;
+  // check if there is a next element on current linkedlist.
+  if (LLIterator_Next(iter->bucket_it))
+  {
+    return true;
+  }
+
+  // go to next bucket to check if there is element in it.
+  while (iter->bucket_idx < table->num_buckets - 1)
+  {
     LLIterator_Free(iter->bucket_it);
-    iter->bucket_idx +=1;
-    iter->bucket_it = LLIterator_Allocate(table->buckets[iter->bucket_idx]);
-    if (LLIterator_Next(iter->bucket_it)) {
+    iter->bucket_idx += 1;
+    if (LinkedList_NumElements(table->buckets[iter->bucket_idx]) > 0)
+    {
+      iter->bucket_it = LLIterator_Allocate(table->buckets[iter->bucket_idx]);
       return true;
     }
   }
-  iter->bucket_it = NULL;
+  // iter->bucket_it = NULL;
+  LLIterator_Free(iter->bucket_it);
+  HTIterator_Free(iter);
   return false;
 }
 
-bool HTIterator_Get(HTIterator *iter, HTKeyValue_t *keyvalue) {
+bool HTIterator_Get(HTIterator *iter, HTKeyValue_t *keyvalue)
+{
   Verify333(iter != NULL);
 
   // STEP 6: implement HTIterator_Get.
-  if (!HTIterator_IsValid(iter) || iter->ht->num_elements == 0) {
+  if (!HTIterator_IsValid(iter) || iter->ht->num_elements == 0)
+  {
     return false;
   }
-  LLPayload_t *payload = (LLPayload_t*) keyvalue;
-  LLIterator_Get(iter->bucket_it, payload);
+  LLIterator_Get(iter->bucket_it, (LLPayload_t *)&keyvalue);
   return true;
 }
 
-bool HTIterator_Remove(HTIterator *iter, HTKeyValue_t *keyvalue) {
+bool HTIterator_Remove(HTIterator *iter, HTKeyValue_t *keyvalue)
+{
   HTKeyValue_t kv;
 
   Verify333(iter != NULL);
 
   // Try to get what the iterator is pointing to.
-  if (!HTIterator_Get(iter, &kv)) {
+  if (!HTIterator_Get(iter, &kv))
+  {
     return false;
   }
 
@@ -362,7 +410,8 @@ bool HTIterator_Remove(HTIterator *iter, HTKeyValue_t *keyvalue) {
   return true;
 }
 
-static void MaybeResize(HashTable *ht) {
+static void MaybeResize(HashTable *ht)
+{
   HashTable *newht;
   HashTable tmp;
   HTIterator *it;
@@ -380,7 +429,8 @@ static void MaybeResize(HashTable *ht) {
   // Loop through the old ht copying its elements over into the new one.
   for (it = HTIterator_Allocate(ht);
        HTIterator_IsValid(it);
-       HTIterator_Next(it)) {
+       HTIterator_Next(it))
+  {
     HTKeyValue_t item, unused;
 
     Verify333(HTIterator_Get(it, &item));
