@@ -26,7 +26,7 @@ LinkedList* LinkedList_Allocate(void) {
   Verify333(ll != NULL);
 
   // STEP 1: initialize the newly allocated record structure.
-  ll->num_elements=0;
+  ll->num_elements = 0;
   ll->head = NULL;
   ll->tail = NULL;
 
@@ -43,8 +43,8 @@ void LinkedList_Free(LinkedList *list,
   // (using the payload_free_function supplied as an argument) and
   // the nodes themselves.
 
-  //iterate thru LL until LL is finished
-  while(list->head != NULL) {
+  // iterate thru LL until LL is finished
+  while (list->head != NULL) {
     // first we free the payload that the LL head points to
     payload_free_function(list->head->payload);
     // then we will free the LL Head itself
@@ -88,7 +88,7 @@ void LinkedList_Push(LinkedList *list, LLPayload_t payload) {
 
     // make sure that ln (the new head) doesn't have a val
     // ahead of it
-    ln->prev=NULL;
+    ln->prev = NULL;
     // old head of list is now the "next" element,
     // as ln becomes the new head
     LinkedListNode* oldHead = list->head;
@@ -98,7 +98,6 @@ void LinkedList_Push(LinkedList *list, LLPayload_t payload) {
     // update entire list metadata
     list->num_elements += 1;
     list->head = ln;
-
   }
 }
 
@@ -118,7 +117,7 @@ bool LinkedList_Pop(LinkedList *list, LLPayload_t *payload_ptr) {
     return false;
   }
 
-  //save previous head before we do anything to it.
+  // save previous head before we do anything to it.
   LinkedListNode* oldHead = list->head;
 
   if (list->num_elements == 1) {
@@ -143,8 +142,7 @@ bool LinkedList_Pop(LinkedList *list, LLPayload_t *payload_ptr) {
   free(oldHead);
 
   // success
-  return true; 
-
+  return true;
 }
 
 void LinkedList_Append(LinkedList *list, LLPayload_t payload) {
@@ -177,7 +175,7 @@ void LinkedList_Append(LinkedList *list, LLPayload_t payload) {
 
     // make sure that new_node (the new tail) doesn't have a val
     // after it
-    new_node->next=NULL;
+    new_node->next = NULL;
     // old tail of list is now the "prev" element to
     // the new tail.
     LinkedListNode* oldTail = list->tail;
@@ -345,19 +343,17 @@ bool LLIterator_Remove(LLIterator *iter,
     iter->node->prev = NULL;
     // update list metadata
     iter->list->head = iter->node;
-  }
-  // DEGENERATE CASE 3: iter points at tail
+  } else if (iter->node->next == NULL) {
+    // DEGENERATE CASE 3: iter points at tail
     // - if the deleted node was the tail, the iterator is now pointing at the
     //   predecessor.
-  else if (iter->node->next == NULL) {
     iter->node = removed_node->prev;
     iter->node->next = NULL;
     // update list metadata
     iter->list->tail = iter->node;
-  }
-  // FULLY GENERAL CASE: iter points in the middle of a list,
-  //                     and you have to "splice".
-  else {
+  } else {
+    // FULLY GENERAL CASE: iter points in the middle of a list,
+    //                     and you have to "splice".
     // basically want to "skip" this current node. prev and next nodes
     // on either side of removed node should be pointing to each other.
     removed_node->next->prev = removed_node->prev;
@@ -367,7 +363,7 @@ bool LLIterator_Remove(LLIterator *iter,
   }
 
   // update list metadata size.
-  iter->list->num_elements -= 1; 
+  iter->list->num_elements -= 1;
   // free node to be deleted.
   free(removed_node);
   // true if the deletion succeeded, and the list is still non-empty.
@@ -386,7 +382,6 @@ bool LinkedList_Slice(LinkedList *list, LLPayload_t *payload_ptr) {
 
   // since Slice is the "tail" version of Pop,
   // this is largely taken from Pop but for the tail.
-  
   // testing for empty case and failing.
   if (list->num_elements == 0) {
     return false;
