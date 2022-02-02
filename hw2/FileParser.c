@@ -69,19 +69,27 @@ char* ReadFileToString(const char* file_name, int* size) {
   // Use the stat system call to fetch a "struct stat" that describes
   // properties of the file. ("man 2 stat"). You can assume we're on a 64-bit
   // system, with a 64-bit off_t field.
-
+  //struct stat* stat_buf = malloc(sizeof(struct stat));
+  file_stat = (struct stat*) malloc(sizeof(struct stat));
+  result = stat(file_name, file_stat);
 
 
   // STEP 2.
   // Make sure this is a "regular file" and not a directory or something else
   // (use the S_ISREG macro described in "man 2 stat").
-
+  if (S_ISREG(file_stat.st_mode) == 0) {
+    printf("File passed into ReadFileToString is not a 'regular file'!\n");
+    exit(EXIT_FAILURE);
+  }
 
 
   // STEP 3.
   // Attempt to open the file for reading (see also "man 2 open").
-
-
+  fd = open(file_name, O_RDONLY);
+  if (fd < 0) {
+    printf("Could not open file in ReadFileToString!");
+    exit(EXIT_FAILURE);
+  }
 
   // STEP 4.
   // Allocate space for the file, plus 1 extra byte to
