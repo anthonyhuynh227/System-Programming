@@ -199,6 +199,18 @@ void FreeWordPositionsTable(HashTable *table) {
 ///////////////////////////////////////////////////////////////////////////////
 // Internal helper functions
 
+char* copy_string(char* src, int size) {
+  char* str = (char *) malloc(sizeof(char) * size);
+  int i;
+  while (i < size) {
+    *str = *src;
+    str++;
+    i++;
+  }
+  *str = '\0'; // don’t forget the null terminator!
+  return str;
+}
+
 static void InsertContent(HashTable* tab, char* content) {
   char* cur_ptr = content;
   char* word_start = content;
@@ -231,8 +243,28 @@ static void InsertContent(HashTable* tab, char* content) {
   // AddWordPosition() helper with appropriate arguments, e.g.,
   // AddWordPosition(tab, wordstart, pos);
 
-  while (1) {
-    break;  // you may want to change this
+
+  bool found_start_of_word = true;
+  int word_size = 0;
+  int index = 0;
+  while (*cur_ptr != '\0') {
+    if (isalpha(*cur_ptr)) { // reached the end of the word
+      if (!found_start_of_word) {
+        word_start = cur_ptr;
+        found_start_of_word = true;
+        word_size = 0;
+      }
+      *cur_ptr = tolower(*cur_ptr);
+      cur_ptr += 1;
+      word_size += 1;
+    } else if (found_start_of_word) {
+      // reached the end of a word, and have a full word (since we know word start)
+      found_start_of_word = false;
+      char* word = copy_string(word_start, word_size);
+      // add word to hashmap
+      AddWordPosition(tab, word, index - word_size);
+    }
+    index += 1;
   }  // end while-loop
 }
 
