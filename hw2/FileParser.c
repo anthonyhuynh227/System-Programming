@@ -296,5 +296,14 @@ static void AddWordPosition(HashTable* tab, char* word,
     // No; this is the first time we've seen this word.  Allocate and prepare
     // a new WordPositions structure, and append the new position to its list
     // using a similar ugly hack as right above.
+    WordPositions* new_node = (WordPositions*) malloc(sizeof(WordPositions));
+    new_node->positions = LinkedList_Allocate();
+    new_node->word = word;
+    LinkedList_Append(new_node->positions, (LLPayload_t) (int64_t) pos);
+
+    // add to hashtable
+    kv.value = (void*) new_node;
+    kv.key = hash_key;
+    HashTable_Insert(tab, kv, NULL);
   }
 }
