@@ -129,6 +129,7 @@ char* ReadFileToString(const char* file_name, int* size) {
       // EOF reached, so stop reading
       break;
     }
+    left_to_read -= result;
   }
 
   // Great, we're done!  We hit the end of the file and we read
