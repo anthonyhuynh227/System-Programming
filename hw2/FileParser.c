@@ -28,7 +28,6 @@
 #include "libhw1/CSE333.h"
 #include "./MemIndex.h"
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // Constants and declarations of internal helper functions
 
@@ -36,31 +35,32 @@
 
 // Frees a WordPositions.positions's payload, which is just a
 // DocPositionOffset_t.
-static void NoOpFree(LLPayload_t payload) { }
+static void NoOpFree(LLPayload_t payload) {}
 
 // Frees a WordPositions struct.
-static void FreeWordPositions(HTValue_t payload) {
-  WordPositions* pos = (WordPositions*) payload;
+static void FreeWordPositions(HTValue_t payload)
+{
+  WordPositions *pos = (WordPositions *)payload;
   LinkedList_Free(pos->positions, &NoOpFree);
   free(pos->word);
   free(pos);
 }
 
 // Add a normalized word and its byte offset into the WordPositions HashTable.
-static void AddWordPosition(HashTable* tab, char* word,
+static void AddWordPosition(HashTable *tab, char *word,
                             DocPositionOffset_t pos);
 
 // Parse the passed-in string into normalized words and insert into a HashTable
 // of WordPositions structures.
-static void InsertContent(HashTable* tab, char* content);
-
+static void InsertContent(HashTable *tab, char *content);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Publically-exported functions
 
-char* ReadFileToString(const char* file_name, int* size) {
+char *ReadFileToString(const char *file_name, int *size)
+{
   struct stat file_stat;
-  char* buf;
+  char *buf;
   int result, fd;
   ssize_t num_read;
   size_t left_to_read;
@@ -69,32 +69,33 @@ char* ReadFileToString(const char* file_name, int* size) {
   // Use the stat system call to fetch a "struct stat" that describes
   // properties of the file. ("man 2 stat"). You can assume we're on a 64-bit
   // system, with a 64-bit off_t field.
-  if(stat(file_name, &file_stat) == -1) {
+  if (stat(file_name, &file_stat) == -1)
+  {
     return NULL;
   }
-
 
   // STEP 2.
   // Make sure this is a "regular file" and not a directory or something else
   // (use the S_ISREG macro described in "man 2 stat").
-  if (S_ISREG(file_stat.st_mode) == 0) {
+  if (S_ISREG(file_stat.st_mode) == 0)
+  {
     printf("File passed into ReadFileToString is not a 'regular file'!\n");
     return NULL;
   }
 
-
   // STEP 3.
   // Attempt to open the file for reading (see also "man 2 open").
   fd = open(file_name, O_RDONLY);
-  if (fd < 0) {
-    printf("Could not open file in ReadFileToString!");
-    return NULL;
+  if (fd < 0)
+  {
+    perror("Could not open file in ReadFileToString!");
+    exit(EXIT_FAILURE);
   }
 
   // STEP 4.
   // Allocate space for the file, plus 1 extra byte to
   // '\0'-terminate the string.
-  buf = (char*) malloc(sizeof(char) * (file_stat.st_size + 1));
+  buf = (char *)malloc(sizeof(char) * (file_stat.st_size + 1));
 
   // STEP 5.
   // Read in the file contents using the read() system call (see also
@@ -106,10 +107,13 @@ char* ReadFileToString(const char* file_name, int* size) {
   // particular what the return values -1 and 0 imply.
   left_to_read = file_stat.st_size;
   num_read = 0;
-  while (left_to_read > 0) {
-    result = read(fd, buf + num_read, left_to_read);
-    if (result == -1) {
-      if (errno != EINTR || errno != EAGAIN) {
+  while (left_to_read > 0)
+  {
+    result = read(fd, buf + file_stat.st_size - left_to_read, left_to_read);
+    if (result == -1)
+    {
+      if (errno != EINTR || errno != EAGAIN)
+      {
         // a real error happened, so return an error result
         printf("could not read file!! %s\n", file_name);
         close(fd);
@@ -118,7 +122,9 @@ char* ReadFileToString(const char* file_name, int* size) {
       }
       // EINTR happened, so do nothing and try again
       continue;
-    } else if (result == 0) {
+    }
+    else if (result == 0)
+    {
       // EOF reached, so stop reading
       left_to_read = 0;
     }
@@ -138,25 +144,30 @@ char* ReadFileToString(const char* file_name, int* size) {
   return buf;
 }
 
-HashTable* ParseIntoWordPositionsTable(char* file_contents) {
-  HashTable* tab;
+HashTable *ParseIntoWordPositionsTable(char *file_contents)
+{
+  HashTable *tab;
   int i, file_len;
 
-  if (file_contents == NULL) {
+  if (file_contents == NULL)
+  {
     return NULL;
   }
 
   file_len = strlen(file_contents);
-  if (file_len == 0) {
+  if (file_len == 0)
+  {
     return NULL;
   }
 
   // Verify that the file contains only ASCII text.  We won't try to index any
   // files that contain non-ASCII text; unfortunately, this means we aren't
   // Unicode friendly.
-  for (i = 0; i < file_len; i++) {
+  for (i = 0; i < file_len; i++)
+  {
     if (file_contents[i] == '\0' ||
-        (unsigned char) file_contents[i] > ASCII_UPPER_BOUND) {
+        (unsigned char)file_contents[i] > ASCII_UPPER_BOUND)
+    {
       free(file_contents);
       return NULL;
     }
@@ -173,7 +184,8 @@ HashTable* ParseIntoWordPositionsTable(char* file_contents) {
   InsertContent(tab, file_contents);
 
   // If we found no words, return NULL instead of a zero-sized hashtable.
-  if (HashTable_NumElements(tab) == 0) {
+  if (HashTable_NumElements(tab) == 0)
+  {
     HashTable_Free(tab, &FreeWordPositions);
     tab = NULL;
   }
@@ -184,18 +196,20 @@ HashTable* ParseIntoWordPositionsTable(char* file_contents) {
   return tab;
 }
 
-void FreeWordPositionsTable(HashTable *table) {
+void FreeWordPositionsTable(HashTable *table)
+{
   HashTable_Free(table, &FreeWordPositions);
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Internal helper functions
 
-char* copy_string(char* src, int size) {
-  char* str = (char *) malloc(sizeof(char) * size);
+char *copy_string(char *src, int size)
+{
+  char *str = (char *)malloc(sizeof(char) * size);
   int i;
-  while (i < size) {
+  while (i < size)
+  {
     *str = *src;
     str++;
     i++;
@@ -204,9 +218,10 @@ char* copy_string(char* src, int size) {
   return str;
 }
 
-static void InsertContent(HashTable* tab, char* content) {
-  char* cur_ptr = content;
-  char* word_start = content;
+static void InsertContent(HashTable *tab, char *content)
+{
+  char *cur_ptr = content;
+  char *word_start = content;
 
   // STEP 6.
   // This is the interesting part of Part A!
@@ -237,14 +252,19 @@ static void InsertContent(HashTable* tab, char* content) {
   // AddWordPosition(tab, wordstart, pos);
 
   bool found_word_start = false;
-  while (*cur_ptr != '\0') {
-    if (isalpha(*cur_ptr)) {
+  while (*cur_ptr != '\0')
+  {
+    if (isalpha(*cur_ptr))
+    {
       *cur_ptr = tolower(*cur_ptr);
-      if (!found_word_start) {
+      if (!found_word_start)
+      {
         word_start = cur_ptr;
         found_word_start = true;
       }
-    } else {
+    }
+    else
+    {
       // mark this current char as the end of the word
       *cur_ptr = '\0';
       // isalpha(*(cur_ptr - 1)) --> checks if the char before this current
@@ -252,51 +272,60 @@ static void InsertContent(HashTable* tab, char* content) {
 
       // cur_ptr != content --> makes sure that we are not adding the entire
       // thing (like if the first char in content is not alpha)
-      if (isalpha(*(cur_ptr - 1)) && cur_ptr != content) {
+      if (isalpha(*(cur_ptr - 1)) && cur_ptr != content)
+      {
         AddWordPosition(tab, word_start, (word_start - content));
         found_word_start = false;
       }
+      word_start = NULL;
     }
     cur_ptr += 1;
   } // end while-loop
 }
 
-static void AddWordPosition(HashTable* tab, char* word,
-                            DocPositionOffset_t pos) {
+static void AddWordPosition(HashTable *tab, char *word,
+                            DocPositionOffset_t pos)
+{
   HTKey_t hash_key;
   HTKeyValue_t kv;
   WordPositions *wp;
 
   // Hash the string.
-  hash_key = FNVHash64((unsigned char*) word, strlen(word));
+  hash_key = FNVHash64((unsigned char *)word, strlen(word));
 
   // Have we already encountered this word within this file?  If so, it's
   // already in the hashtable.
-  if (HashTable_Find(tab, hash_key, &kv)) {
+  if (HashTable_Find(tab, hash_key, &kv))
+  {
     // Yes; we just need to add a position in using LinkedList_Append(). Note
     // how we're casting the DocPositionOffset_t position variable to an
     // LLPayload_t to store it in the linked list payload without needing to
     // malloc space for it.  Ugly, but it works!
-    wp = (WordPositions*) kv.value;
+    wp = (WordPositions *)kv.value;
 
     // Ensure we don't have hash collisions (two different words that hash to
     // the same key, which is very unlikely).
     Verify333(strcmp(wp->word, word) == 0);
 
-    LinkedList_Append(wp->positions, (LLPayload_t) (int64_t) pos);
-  } else {
+    LinkedList_Append(wp->positions, (LLPayload_t)(int64_t)pos);
+  }
+  else
+  {
     // STEP 7.
     // No; this is the first time we've seen this word.  Allocate and prepare
     // a new WordPositions structure, and append the new position to its list
     // using a similar ugly hack as right above.
-    WordPositions* new_node = (WordPositions*) malloc(sizeof(WordPositions));
+    WordPositions *new_node = (WordPositions *)malloc(sizeof(WordPositions));
     new_node->positions = LinkedList_Allocate();
-    new_node->word = word;
-    LinkedList_Append(new_node->positions, (LLPayload_t) (int64_t) pos);
+    char *newstr = (char *)malloc(strlen(word) + 1);
+    strncpy(newstr, word, strlen(word) + 1);
+    new_node->word = newstr;
+    LinkedList_Append(new_node->positions, (LLPayload_t)(int64_t)pos);
 
     // add to hashtable
-    kv.value = (void*) new_node;
+    kv.value = (HTValue_t *)new_node;
     kv.key = hash_key;
-    HashTable_Insert(tab, kv, NULL);
+    HTKeyValue_t oldkv;
+    HashTable_Insert(tab, kv, &oldkv);
   }
 }
