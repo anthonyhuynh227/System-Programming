@@ -59,7 +59,7 @@ static void InsertContent(HashTable* tab, char* content);
 // Publically-exported functions
 
 char* ReadFileToString(const char* file_name, int* size) {
-  struct stat* file_stat;
+  struct stat file_stat;
   char* buf;
   int result, fd;
   ssize_t num_read;
@@ -69,24 +69,17 @@ char* ReadFileToString(const char* file_name, int* size) {
   // Use the stat system call to fetch a "struct stat" that describes
   // properties of the file. ("man 2 stat"). You can assume we're on a 64-bit
   // system, with a 64-bit off_t field.
-  file_stat = (struct stat*) malloc(sizeof(struct stat));
-  if (file_stat == NULL) { //OOM error
-    printf("out of memory\n");
-    return(EXIT_FAILURE);
-  }
-  int stat_read = stat(file_name, file_stat);
-  if (stat_read == -1) { // stat() failed
-    printf("Failed to view info about current dir\n");
-    return(EXIT_FAILURE);
+  if(stat(file_name, &file_stat) == -1) {
+    return NULL;
   }
 
 
   // STEP 2.
   // Make sure this is a "regular file" and not a directory or something else
   // (use the S_ISREG macro described in "man 2 stat").
-  if (S_ISREG(file_stat->st_mode) == 0) {
+  if (S_ISREG(file_stat.st_mode) == 0) {
     printf("File passed into ReadFileToString is not a 'regular file'!\n");
-    exit(EXIT_FAILURE);
+    return NULL;
   }
 
 
@@ -95,13 +88,13 @@ char* ReadFileToString(const char* file_name, int* size) {
   fd = open(file_name, O_RDONLY);
   if (fd < 0) {
     printf("Could not open file in ReadFileToString!");
-    exit(EXIT_FAILURE);
+    return NULL;
   }
 
   // STEP 4.
   // Allocate space for the file, plus 1 extra byte to
   // '\0'-terminate the string.
-  buf = (char*) malloc(file_stat->st_size + 1);
+  buf = (char*) malloc(sizeof(char) * (file_stat.st_size + 1));
 
   // STEP 5.
   // Read in the file contents using the read() system call (see also
@@ -111,24 +104,25 @@ char* ReadFileToString(const char* file_name, int* size) {
   // read() inside a while loop, looping until you've read to the end of file
   // or a non-recoverable error.  Read the man page for read() carefully, in
   // particular what the return values -1 and 0 imply.
-  left_to_read = file_stat->st_size;
+  left_to_read = file_stat.st_size;
+  num_read = 0;
   while (left_to_read > 0) {
-    result = read(fd, buf, left_to_read);
+    result = read(fd, buf + num_read, left_to_read);
     if (result == -1) {
-      if (errno != EINTR) {
+      if (errno != EINTR || errno != EAGAIN) {
         // a real error happened, so return an error result
         printf("could not read file!! %s\n", file_name);
         close(fd);
-        free(file_stat);
         free(buf);
-        exit(EXIT_FAILURE);
+        return NULL;
       }
       // EINTR happened, so do nothing and try again
       continue;
     } else if (result == 0) {
       // EOF reached, so stop reading
-      break;
+      left_to_read = 0;
     }
+    num_read += result;
     left_to_read -= result;
   }
 
@@ -137,7 +131,7 @@ char* ReadFileToString(const char* file_name, int* size) {
   // by open() and return through the "size" output parameter how many bytes
   // we read.
   close(fd);
-  *size = file_stat->st_size - left_to_read;
+  *size = file_stat.st_size - left_to_read;
 
   // Null-terminate the string.
   buf[*size] = '\0';
@@ -173,7 +167,6 @@ HashTable* ParseIntoWordPositionsTable(char* file_contents) {
   // word.  Since our hash table dynamically grows, we'll start with a small
   // number of buckets.
   tab = HashTable_Allocate(32);
-  Verify333(tab != NULL);
 
   // Loop through the file, splitting it into words and inserting a record for
   // each word.
@@ -243,29 +236,29 @@ static void InsertContent(HashTable* tab, char* content) {
   // AddWordPosition() helper with appropriate arguments, e.g.,
   // AddWordPosition(tab, wordstart, pos);
 
-
-  bool found_start_of_word = true;
-  int word_size = 0;
-  int index = 0;
+  bool found_word_start = false;
   while (*cur_ptr != '\0') {
-    if (isalpha(*cur_ptr)) { // reached the end of the word
-      if (!found_start_of_word) {
-        word_start = cur_ptr;
-        found_start_of_word = true;
-        word_size = 0;
-      }
+    if (isalpha(*cur_ptr)) {
       *cur_ptr = tolower(*cur_ptr);
-      cur_ptr += 1;
-      word_size += 1;
-    } else if (found_start_of_word) {
-      // reached the end of a word, and have a full word (since we know word start)
-      found_start_of_word = false;
-      char* word = copy_string(word_start, word_size);
-      // add word to hashmap
-      AddWordPosition(tab, word, index - word_size);
+      if (!found_word_start) {
+        word_start = cur_ptr;
+        found_word_start = true;
+      }
+    } else {
+      // mark this current char as the end of the word
+      *cur_ptr = '\0';
+      // isalpha(*(cur_ptr - 1)) --> checks if the char before this current
+      // char is alphabetical
+
+      // cur_ptr != content --> makes sure that we are not adding the entire
+      // thing (like if the first char in content is not alpha)
+      if (isalpha(*(cur_ptr - 1)) && cur_ptr != content) {
+        AddWordPosition(tab, word_start, (word_start - content));
+        found_word_start = false;
+      }
     }
-    index += 1;
-  }  // end while-loop
+    cur_ptr += 1;
+  } // end while-loop
 }
 
 static void AddWordPosition(HashTable* tab, char* word,
