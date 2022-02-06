@@ -95,6 +95,7 @@ DocID_t DocTable_Add(DocTable* table, char* doc_name) {
   kv.key = *doc_id;
   kv.value = doc_copy;
 
+  // insert into hashtable
   HT_result = HashTable_Insert(table->id_to_name, kv, &old_kv);
 
   // STEP 4.
