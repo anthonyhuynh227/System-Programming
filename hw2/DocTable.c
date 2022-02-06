@@ -22,27 +22,24 @@
 // This structure represents a DocTable; it contains two hash tables, one
 // mapping from document id to document name, and one mapping from
 // document name to document id.
-struct doctable_st
-{
-  HashTable *id_to_name; // mapping document id to document name
-  HashTable *name_to_id; // mapping document name to document id
-  DocID_t max_id;        // max doc ID allocated so far
+struct doctable_st {
+  HashTable* id_to_name;  // mapping document id to document name
+  HashTable* name_to_id;  // mapping document name to document id
+  DocID_t    max_id;      // max doc ID allocated so far
 };
 
-DocTable *DocTable_Allocate(void)
-{
-  DocTable *dt = (DocTable *)malloc(sizeof(DocTable));
+DocTable* DocTable_Allocate(void) {
+  DocTable* dt = (DocTable*) malloc(sizeof(DocTable));
   Verify333(dt != NULL);
 
   dt->id_to_name = HashTable_Allocate(HASHTABLE_INITIAL_NUM_BUCKETS);
   dt->name_to_id = HashTable_Allocate(HASHTABLE_INITIAL_NUM_BUCKETS);
-  dt->max_id = 1; // we reserve max_id = 0 for the invalid docID
+  dt->max_id = 1;  // we reserve max_id = 0 for the invalid docID
 
   return dt;
 }
 
-void DocTable_Free(DocTable *table)
-{
+void DocTable_Free(DocTable* table) {
   Verify333(table != NULL);
 
   // STEP 1.
@@ -52,14 +49,12 @@ void DocTable_Free(DocTable *table)
   free(table);
 }
 
-int DocTable_NumDocs(DocTable *table)
-{
+int DocTable_NumDocs(DocTable* table) {
   Verify333(table != NULL);
   return HashTable_NumElements(table->id_to_name);
 }
 
-DocID_t DocTable_Add(DocTable *table, char *doc_name)
-{
+DocID_t DocTable_Add(DocTable* table, char* doc_name) {
   char *doc_copy;
   DocID_t *doc_id;
   DocID_t res;
@@ -70,28 +65,27 @@ DocID_t DocTable_Add(DocTable *table, char *doc_name)
   // STEP 2.
   // Check to see if the document already exists.  Then make a copy of the
   // doc_name and allocate space for the new ID.
-
+  
   // call hash function for document name
-  res = FNVHash64((unsigned char *)doc_name, strlen(doc_name));
+  res = FNVHash64((unsigned char*) doc_name, strlen(doc_name));
   // find hashed val in HT
   // (the variable HT_result will be used to check the result of
   // the last hashtable operation performed)
   bool HT_result = HashTable_Find(table->name_to_id, res, &old_kv);
 
-  if (HT_result == true)
-  {
+  if (HT_result == true) {
     // if we found the document in the HT, we just want
     // to return the document id
-    return *((DocID_t *)old_kv.value);
+    return *((DocID_t*) old_kv.value);
   }
 
   // make copy of doc_name
-  doc_copy = (char *)malloc(sizeof(char) * strlen(doc_name));
+  doc_copy = (char*) malloc(sizeof(char) * strlen(doc_name));
   Verify333(doc_copy != NULL);
   strncpy(doc_copy, doc_name, strlen(doc_name));
 
   // allocate space for new ID
-  doc_id = (DocID_t *)malloc(sizeof(DocID_t));
+  doc_id = (DocID_t*) malloc(sizeof(DocID_t));
 
   *doc_id = table->max_id;
   table->max_id++;
@@ -115,8 +109,7 @@ DocID_t DocTable_Add(DocTable *table, char *doc_name)
   return *doc_id;
 }
 
-DocID_t DocTable_GetDocID(DocTable *table, char *doc_name)
-{
+DocID_t DocTable_GetDocID(DocTable* table, char* doc_name) {
   HTKey_t key;
   HTKeyValue_t kv;
   //DocID_t res;
@@ -128,20 +121,18 @@ DocID_t DocTable_GetDocID(DocTable *table, char *doc_name)
   // Try to find the passed-in doc in name_to_id table.
 
   // hash document name
-  key = FNVHash64((unsigned char *)doc_name, strlen(doc_name));
+  key = FNVHash64((unsigned char *) doc_name, strlen(doc_name));
   bool HT_result = HashTable_Find(table->name_to_id, key, &kv);
 
-  if (HT_result == true)
-  {
+  if (HT_result == true) {
     // value was found in HT, so return docID_t
-    return *(DocID_t *)kv.value;
+    return *(DocID_t*) kv.value;
   }
 
-  return INVALID_DOCID; // doc_name not in HT
+  return INVALID_DOCID;  // doc_name not in HT
 }
 
-char *DocTable_GetDocName(DocTable *table, DocID_t doc_id)
-{
+char* DocTable_GetDocName(DocTable* table, DocID_t doc_id) {
   HTKeyValue_t kv;
 
   Verify333(table != NULL);
@@ -154,22 +145,19 @@ char *DocTable_GetDocName(DocTable *table, DocID_t doc_id)
   // NULL if the key isn't in the table.
   bool HT_result = HashTable_Find(table->id_to_name, doc_id, &kv);
 
-  if (HT_result == true)
-  {
-    return (char *)kv.value;
+  if (HT_result == true) {
+    return (char*) kv.value;
   }
 
-  return NULL; // could not find doc name
+  return NULL;  // could not find doc name
 }
 
-HashTable *DT_GetIDToNameTable(DocTable *table)
-{
+HashTable* DT_GetIDToNameTable(DocTable* table) {
   Verify333(table != NULL);
   return table->id_to_name;
 }
 
-HashTable *DT_GetNameToIDTable(DocTable *table)
-{
+HashTable* DT_GetNameToIDTable(DocTable* table) {
   Verify333(table != NULL);
   return table->name_to_id;
 }
