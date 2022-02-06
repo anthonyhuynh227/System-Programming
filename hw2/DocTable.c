@@ -106,6 +106,7 @@ DocID_t DocTable_Add(DocTable* table, char* doc_name) {
   kv.key = res;
   kv.value = doc_id;
   HT_result = HashTable_Insert(table->name_to_id, kv, &old_kv);
+  Verify333(HT_result == true);
 
   return *doc_id;
 }
