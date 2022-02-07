@@ -134,23 +134,18 @@ static void HandleDir(char* dir_path, DIR* d, DocTable** doc_table,
   // Change/add to this loop to use the "readdir()" system call to
   // read the directory entries in the loop ("man 3 readdir").
   // Exit out of the loop when we reach the end of the directory.
-  while(true) {
-    dirent = readdir(d);
-    if (dirent == NULL) {
-      return; // when dirent == NULL, we have reached end of directory
-      // so we exit
-    }
+  for (i = 0; (dirent = readdir(d)) != NULL; i++) {
 
     // STEP 2.
     // If the directory entry is named "." or "..", ignore it.  Use the C
     // "continue" expression to begin the next iteration of the loop.  What
     // field in the dirent could we use to find out the name of the entry?
     // How do you compare strings in C?
-    if (!strcmp(dirent->d_name, ".") || !strcmp(dirent->d_name, "..")) {
+    if ( strcmp(dirent->d_name, ".") == 0 || strcmp(dirent->d_name, "..") == 0) {
+      i--;
       continue; // skip
     }
 
-    i++;
     
     //
     // Record the name and directory status.
@@ -195,17 +190,12 @@ static void HandleDir(char* dir_path, DIR* d, DocTable** doc_table,
       // using/ HandleDir() in our second pass.
       //
       // If it is neither, skip the file.
-      if (S_ISREG(st.st_mode)) {
-        // regular file so give it the HandleFile() priv helper function
-        HandleFile(entries[i].path_name, doc_table, index);
-      } else if (S_ISDIR(st.st_mode)) {
-        // need to recursively process i using HandleDir() in second pass
-        directory = opendir(entries[i].path_name);
-        
-        // recursive function
-        HandleDir(entries[i].path_name, directory, doc_table, index);
-        
-        closedir(directory);
+      if (S_ISDIR(st.st_mode)) {
+        entries[i].is_dir = true;
+      } else if (S_ISREG(st.st_mode)) {
+        entries[i].is_dir = false;
+      } else {
+        i--;
       }
     }
   }  // end iteration over directory contents ("first pass").
@@ -234,7 +224,7 @@ static void HandleDir(char* dir_path, DIR* d, DocTable** doc_table,
 
 static void HandleFile(char* file_path, DocTable** doc_table,
                         MemIndex** index) {
-  //int file_len = 0;
+  int file_len = 0;
   HashTable* tab = NULL;
   DocID_t doc_id;
   HTIterator* it;
@@ -242,7 +232,12 @@ static void HandleFile(char* file_path, DocTable** doc_table,
   // STEP 4.
   // Invoke ParseIntoWordPositionsTable() to build the word hashtable out
   // of the file.
-  tab = ParseIntoWordPositionsTable(file_path);
+  char* file_content = ReadFileToString(file_path,&file_len);
+  if(file_content ==NULL) {
+    free(file_content);
+    return;
+  }
+  tab = ParseIntoWordPositionsTable(file_content);
   if (tab == NULL) {
     return; // errors in ParseWordPositionsTable return null
   }
@@ -263,12 +258,10 @@ static void HandleFile(char* file_path, DocTable** doc_table,
     // of the hashtable. Then, use MemIndex_AddPostingList() to add the word,
     // document ID, and positions linked list into the inverted index.
     bool HT_result = HTIterator_Remove(it, &kv);
-    if (HT_result == true) {
-      wp = (WordPositions*) kv.value;
-      MemIndex_AddPostingList(*index, wp->word, doc_id, wp->positions);
-    }
+    wp = (WordPositions*) kv.value;
+    MemIndex_AddPostingList(*index, wp->word, doc_id, wp->positions);
 
-
+    
     // Since we've transferred ownership of the memory associated with both
     // the "word" and "positions" field of this WordPositions structure, and
     // since we've removed it from the table, we can now free the

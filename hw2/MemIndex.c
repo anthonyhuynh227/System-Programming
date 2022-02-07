@@ -119,10 +119,12 @@ void MemIndex_AddPostingList(MemIndex* index, char* word, DocID_t doc_id,
 
     // (1)
     wp = (WordPostings*) malloc(sizeof(WordPostings));
+    Verify333(wp != NULL);
     wp->word = word;
 
     // (2)
     wp->postings = HashTable_Allocate(100);
+    Verify333(wp ->postings != NULL);
 
     // (3)
     mi_kv.value = wp;
@@ -164,7 +166,7 @@ LinkedList* MemIndex_Search(MemIndex* index, char* query[], int query_len) {
   LinkedList* ret_list;
   HTKeyValue_t kv;
   WordPostings* wp;
-  //HTKey_t key;
+  HTKey_t key;
   int i;
 
   // If the user provided us with an empty search query, return NULL
@@ -185,7 +187,8 @@ LinkedList* MemIndex_Search(MemIndex* index, char* query[], int query_len) {
   ret_list = LinkedList_Allocate();
 
   // look up the first query word (ie, query[0]) in the inverted index:
-  bool HT_result = HashTable_Find(index, FNVHash64((unsigned char*)query[0], strlen(query[0])), &kv);
+  key = FNVHash64((unsigned char*)query[0], strlen(query[0]));
+  bool HT_result = HashTable_Find(index, key, &kv);
 
   if (HT_result == false) { // could not find
     LinkedList_Free(ret_list, &free);
@@ -193,8 +196,9 @@ LinkedList* MemIndex_Search(MemIndex* index, char* query[], int query_len) {
   }
 
   // for each document that matches...
-  wp = kv.value;
+  wp = (WordPostings*) kv.value;
   HTIterator* iter = HTIterator_Allocate(wp->postings);
+  Verify333(iter != NULL);
   while (HTIterator_IsValid(iter)) {
     // allocate and initialize a SearchResult structure
     SearchResult* sr = (SearchResult*) malloc(sizeof(SearchResult));
@@ -208,6 +212,7 @@ LinkedList* MemIndex_Search(MemIndex* index, char* query[], int query_len) {
 
     HTIterator_Next(iter);
   }
+  HTIterator_Free(iter);
   
   // Great; we have our search results for the first query
   // word.  If there is only one query word, we're done!
@@ -227,7 +232,8 @@ LinkedList* MemIndex_Search(MemIndex* index, char* query[], int query_len) {
     // Look up the next query word (query[i]) in the inverted index.
     // If there are no matches, it means the overall query
     // should return no documents, so free retlist and return NULL.
-    HT_result = HashTable_Find(index, FNVHash64((unsigned char*)query[i], strlen(query[i])), &kv);
+    key = FNVHash64((unsigned char*)query[i], strlen(query[i]));
+    HT_result = HashTable_Find(index, key, &kv);
 
     if (HT_result == false) {
       LinkedList_Free(ret_list, &free);

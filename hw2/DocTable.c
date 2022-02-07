@@ -80,9 +80,9 @@ DocID_t DocTable_Add(DocTable* table, char* doc_name) {
   }
 
   // make copy of doc_name
-  doc_copy = (char*) malloc(sizeof(char) * strlen(doc_name));
+  doc_copy = (char*) malloc(sizeof(char) * strlen(doc_name) +1);
   Verify333(doc_copy != NULL);
-  strncpy(doc_copy, doc_name, strlen(doc_name));
+  strncpy(doc_copy, doc_name, strlen(doc_name) +1);
 
   // allocate space for new ID
   doc_id = (DocID_t*) malloc(sizeof(DocID_t));
@@ -105,7 +105,6 @@ DocID_t DocTable_Add(DocTable* table, char* doc_name) {
   kv.key = res;
   kv.value = doc_id;
   HT_result = HashTable_Insert(table->name_to_id, kv, &old_kv);
-
   return *doc_id;
 }
 
