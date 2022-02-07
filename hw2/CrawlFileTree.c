@@ -126,7 +126,7 @@ static void HandleDir(char* dir_path, DIR* d, DocTable** doc_table,
 
   int num_entries;
 
-  DIR* directory;
+
 
   // First pass, to populate the "entries" list of item metadata.
   //
@@ -255,7 +255,7 @@ static void HandleFile(char* file_path, DocTable** doc_table,
     // Use HTIterator_Remove() to extract the next WordPositions structure out
     // of the hashtable. Then, use MemIndex_AddPostingList() to add the word,
     // document ID, and positions linked list into the inverted index.
-    bool HT_result = HTIterator_Remove(it, &kv);
+    HTIterator_Remove(it, &kv);
     wp = (WordPositions*) kv.value;
     MemIndex_AddPostingList(*index, wp->word, doc_id, wp->positions);
 
