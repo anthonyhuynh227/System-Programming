@@ -75,14 +75,18 @@ int main(int argc, char** argv) {
     if (fgets(line, sizeof(line), stdin)) {
       // char* -> string
       // char** -> array of strings, same as char* query[]
+      //printf("segfault at malloc tokens\n");
       char** tokens = (char**) malloc(sizeof(line) * sizeof(char*));
       // check for OOM error
       Verify333(tokens != NULL);
+      //printf("segfault at converting chars to lowercase\n");
 
       // iterate through line, convert all chars to lowercase
       int i = 0;
-      while (*tokens[i] != '\0') {
-        *tokens[i] = (char)tolower(line[i]);
+      //printf("string is: %s\n", *tokens);
+      while (line[i] != '\0') {
+        //printf("segfault at converting %c token to lower\n", (char)tolower(line[i]));
+        line[i] = (char)tolower(line[i]);
         i++;
       }
 
@@ -90,6 +94,7 @@ int main(int argc, char** argv) {
       char* left_to_read = line;
       char* token;
       int j = 0;
+      //printf("segfault at converting tokens\n");
       while (true) {
         token = strtok_r(left_to_read, " ", &left_to_read);
         if (token == NULL || *token == '\n') {
@@ -101,6 +106,7 @@ int main(int argc, char** argv) {
 
       int query_len = j;
       // replace newline (when press enter) to '\0'
+      //printf("segfault at replacing new line\n");
       char* new_line = strchr(tokens[query_len - 1], '\n');
       if (new_line) {
         *new_line = '\0';
@@ -132,22 +138,30 @@ static void Usage(void) {
   exit(EXIT_FAILURE);
 }
 
+<<<<<<< HEAD
 static void ProcessQueries(DocTable* dt, MemIndex* mi,
                       char** tokens, int query_len) {
+=======
+static void ProcessQueries(DocTable* dt, MemIndex* mi, char** tokens, int query_len) {
+  //printf("segfault at searching memindex\n");
+>>>>>>> 07ff6c5c5d8d30d72f855cb4b7118d7661afa16e
   LinkedList* results = MemIndex_Search(mi, tokens, query_len);
 
   if (results == NULL) {  // no matches found
     return;
   }
 
+  //printf("segfault at allocating iter\n");
   LLIterator* iter = LLIterator_Allocate(results);
   // print linked list results against doc table
 
   SearchResult* res;
   char* current_directory;
+  //printf("segfault at looping through iter\n");
   while (LLIterator_IsValid(iter)) {
     LLIterator_Get(iter, (LLPayload_t*)&res);
     // now that we have doc_id, get directory name
+    //printf("segfault at getting docname\n");
     current_directory = DocTable_GetDocName(dt, res->doc_id);
     printf("    directory: %s\n", current_directory);
     printf("        rank: %d\n", res->rank);
@@ -155,6 +169,7 @@ static void ProcessQueries(DocTable* dt, MemIndex* mi,
     LLIterator_Next(iter);
   }
 
+  //printf("segfault at freeing stuff\n");
   LinkedList_Free(results, &free);
   LLIterator_Free(iter);
 }
