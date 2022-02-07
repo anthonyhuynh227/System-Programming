@@ -93,15 +93,11 @@ void MemIndex_AddPostingList(MemIndex* index, char* word, DocID_t doc_id,
                              LinkedList* postings) {
   HTKey_t key = FNVHash64((unsigned char*) word, strlen(word));
   HTKeyValue_t mi_kv, postings_kv;
-  //HTKeyValue_t unused;
   WordPostings* wp;
 
   // STEP 1.
   // Remove this early return.  We added this in here so that your unittests
   // would pass even if you haven't finished your MemIndex implementation.
-  //return;
-
-
   // First, we have to see if the passed-in word already exists in
   // the inverted index.
   if (!HashTable_Find(index, key, &mi_kv)) {
@@ -150,7 +146,7 @@ void MemIndex_AddPostingList(MemIndex* index, char* word, DocID_t doc_id,
   // list for this word.  Add this new document's postings to it.
 
   // Verify that this document is not already in the posting list.
-  //Verify333(!HashTable_Find(wp->postings, doc_id, &postings_kv));
+  // Verify333(!HashTable_Find(wp->postings, doc_id, &postings_kv));
 
   // STEP 3.
   // Insert a new entry into the wp->postings hash table.
@@ -190,7 +186,7 @@ LinkedList* MemIndex_Search(MemIndex* index, char* query[], int query_len) {
   key = FNVHash64((unsigned char*)query[0], strlen(query[0]));
   bool HT_result = HashTable_Find(index, key, &kv);
 
-  if (HT_result == false) { // could not find
+  if (HT_result == false) {  // could not find
     LinkedList_Free(ret_list, &free);
     return NULL;
   }
@@ -213,7 +209,6 @@ LinkedList* MemIndex_Search(MemIndex* index, char* query[], int query_len) {
     HTIterator_Next(iter);
   }
   HTIterator_Free(iter);
-  
   // Great; we have our search results for the first query
   // word.  If there is only one query word, we're done!
   // Sort the result list and return it to the caller.
@@ -259,7 +254,8 @@ LinkedList* MemIndex_Search(MemIndex* index, char* query[], int query_len) {
     HTKeyValue_t htkv;
     for (j = 0; j < num_docs; j++) {
       LLIterator_Get(ll_it, (LLPayload_t*) &sr);
-      HT_result = HashTable_Find(((WordPostings*) (kv.value))->postings, sr->doc_id, &htkv);
+      HT_result = HashTable_Find(
+        ((WordPostings*) (kv.value))->postings, sr->doc_id, &htkv);
       if (HT_result == true) {
         // update rank if there is match
         sr->rank += LinkedList_NumElements(htkv.value);

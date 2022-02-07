@@ -135,18 +135,16 @@ static void HandleDir(char* dir_path, DIR* d, DocTable** doc_table,
   // read the directory entries in the loop ("man 3 readdir").
   // Exit out of the loop when we reach the end of the directory.
   for (i = 0; (dirent = readdir(d)) != NULL; i++) {
-
     // STEP 2.
     // If the directory entry is named "." or "..", ignore it.  Use the C
     // "continue" expression to begin the next iteration of the loop.  What
     // field in the dirent could we use to find out the name of the entry?
     // How do you compare strings in C?
-    if ( strcmp(dirent->d_name, ".") == 0 || strcmp(dirent->d_name, "..") == 0) {
+    if (strcmp(dirent->d_name, ".") == 0 ||
+                  strcmp(dirent->d_name, "..") == 0) {
       i--;
-      continue; // skip
+      continue;  // skip
     }
-
-    
     //
     // Record the name and directory status.
     //
@@ -232,14 +230,14 @@ static void HandleFile(char* file_path, DocTable** doc_table,
   // STEP 4.
   // Invoke ParseIntoWordPositionsTable() to build the word hashtable out
   // of the file.
-  char* file_content = ReadFileToString(file_path,&file_len);
-  if(file_content ==NULL) {
+  char* file_content = ReadFileToString(file_path, &file_len);
+  if (file_content == NULL) {
     free(file_content);
     return;
   }
   tab = ParseIntoWordPositionsTable(file_content);
   if (tab == NULL) {
-    return; // errors in ParseWordPositionsTable return null
+    return;  // errors in ParseWordPositionsTable return null
   }
 
   // STEP 5.
@@ -261,7 +259,6 @@ static void HandleFile(char* file_path, DocTable** doc_table,
     wp = (WordPositions*) kv.value;
     MemIndex_AddPostingList(*index, wp->word, doc_id, wp->positions);
 
-    
     // Since we've transferred ownership of the memory associated with both
     // the "word" and "positions" field of this WordPositions structure, and
     // since we've removed it from the table, we can now free the

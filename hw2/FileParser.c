@@ -38,8 +38,7 @@
 static void NoOpFree(LLPayload_t payload) {}
 
 // Frees a WordPositions struct.
-static void FreeWordPositions(HTValue_t payload)
-{
+static void FreeWordPositions(HTValue_t payload) {
   WordPositions *pos = (WordPositions *)payload;
   LinkedList_Free(pos->positions, &NoOpFree);
   free(pos->word);
@@ -57,8 +56,7 @@ static void InsertContent(HashTable *tab, char *content);
 ///////////////////////////////////////////////////////////////////////////////
 // Publically-exported functions
 
-char *ReadFileToString(const char *file_name, int *size)
-{
+char *ReadFileToString(const char *file_name, int *size) {
   struct stat file_stat;
   char *buf;
   int result, fd;
@@ -197,7 +195,7 @@ char *copy_string(char *src, int size) {
     str++;
     i++;
   }
-  *str = '\0'; // don’t forget the null terminator!
+  *str = '\0';  // don’t forget the null terminator!
   return str;
 }
 
@@ -249,14 +247,15 @@ static void InsertContent(HashTable *tab, char *content) {
 
       // cur_ptr != content --> makes sure that we are not adding the entire
       // thing (like if the first char in content is not alpha)
-      if (isalpha(*(cur_ptr - 1)) && cur_ptr != content) {
+      if ((cur_ptr - 1) >= content && isalpha(
+                    *(cur_ptr - 1)) && cur_ptr != content) {
         AddWordPosition(tab, word_start, (word_start - content));
         found_word_start = false;
       }
       word_start = NULL;
     }
     cur_ptr += 1;
-  } // end while-loop
+  }  // end while-loop
 }
 
 static void AddWordPosition(HashTable *tab, char *word,

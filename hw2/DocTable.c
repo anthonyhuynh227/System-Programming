@@ -65,7 +65,6 @@ DocID_t DocTable_Add(DocTable* table, char* doc_name) {
   // STEP 2.
   // Check to see if the document already exists.  Then make a copy of the
   // doc_name and allocate space for the new ID.
-  
   // call hash function for document name
   res = FNVHash64((unsigned char*) doc_name, strlen(doc_name));
   // find hashed val in HT
@@ -111,7 +110,7 @@ DocID_t DocTable_Add(DocTable* table, char* doc_name) {
 DocID_t DocTable_GetDocID(DocTable* table, char* doc_name) {
   HTKey_t key;
   HTKeyValue_t kv;
-  //DocID_t res;
+  // DocID_t res;
 
   Verify333(table != NULL);
   Verify333(doc_name != NULL);
