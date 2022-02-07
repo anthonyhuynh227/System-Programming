@@ -26,8 +26,9 @@
 //////////////////////////////////////////////////////////////////////////////
 // Helper function declarations, constants, etc
 static void Usage(void);
-static void ProcessQueries(DocTable* dt, MemIndex* mi, char** tokens, int query_len);
-//static int GetNextLine(FILE* f, char** ret_str);
+static void ProcessQueries(DocTable* dt,
+        MemIndex* mi, char** tokens, int query_len);
+// static int GetNextLine(FILE* f, char** ret_str);
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -92,7 +93,7 @@ int main(int argc, char** argv) {
       while (true) {
         token = strtok_r(left_to_read, " ", &left_to_read);
         if (token == NULL || *token == '\n') {
-          break; // reached the end of tokens
+          break;  // reached the end of tokens
         }
         tokens[j] = token;
         j++;
@@ -131,10 +132,11 @@ static void Usage(void) {
   exit(EXIT_FAILURE);
 }
 
-static void ProcessQueries(DocTable* dt, MemIndex* mi, char** tokens, int query_len) {
+static void ProcessQueries(DocTable* dt, MemIndex* mi,
+                      char** tokens, int query_len) {
   LinkedList* results = MemIndex_Search(mi, tokens, query_len);
 
-  if (results == NULL) { // no matches found
+  if (results == NULL) {  // no matches found
     return;
   }
 
@@ -145,7 +147,6 @@ static void ProcessQueries(DocTable* dt, MemIndex* mi, char** tokens, int query_
   char* current_directory;
   while (LLIterator_IsValid(iter)) {
     LLIterator_Get(iter, (LLPayload_t*)&res);
-    
     // now that we have doc_id, get directory name
     current_directory = DocTable_GetDocName(dt, res->doc_id);
     printf("    directory: %s\n", current_directory);
