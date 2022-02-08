@@ -35,7 +35,7 @@ Vector::Vector(const Vector &copyme) {
 
 // destructor
 Vector::~Vector() {
-    delete xyz_;
+    delete[] xyz_;
 }
 
 // Asignment operator
