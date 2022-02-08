@@ -9,37 +9,39 @@
  * author.
  */
 #include "Vector.h"
+#include <iostream>
 
+namespace vector333 {
 // default constructor
 Vector::Vector() {
-    x_ = 0.0;
-    y_ = 0.0;
-    z_ = 0.0;
+    xyz_ = new float[3];
+    xyz_[0] = 0.0;
+    xyz_[1] = 0.0;
+    xyz_[2] = 0.0;
 }
 
 // defining a constructor with three arguments
 Vector::Vector(const float x, const float y, const float z) {
-    x_ = x;
-    y_ = y;
-    z_ = z;
+    xyz_ = new float[3];
+    xyz_[0] = x;
+    xyz_[1] = y;
+    xyz_[2] = z;
 }
 
 // copy constructor
 Vector::Vector(const Vector &copyme) {
-    x_ = copyme.x_;
-    y_ = copyme.y_;
-    z_ = copyme.z_;
+    xyz_ = copyme.xyz_;
 }
 
 // destructor
-Vector::~Vector() {}
+Vector::~Vector() {
+    delete xyz_;
+}
 
 // Asignment operator
 Vector &Vector::operator=(const Vector &rhs) {
     if (this != &rhs) {
-        x_ = rhs.x_;
-        y_ = rhs.y_;
-        z_ = rhs.z_;
+        xyz_ = rhs.xyz_;
     }
     return *this;
 }
@@ -47,9 +49,9 @@ Vector &Vector::operator=(const Vector &rhs) {
 // return a new vector that is the component-wise sum of 2 vectors
 Vector &Vector::operator+=(const Vector &a) {
     if (this != &a) {
-        x_ += a.x_;
-        y_ += a.y_;
-        z_ += a.z_;
+        xyz_[0] += a.xyz_[0];
+        xyz_[1] += a.xyz_[1];
+        xyz_[2] += a.xyz_[2];
     }
     return *this;
 }
@@ -57,14 +59,32 @@ Vector &Vector::operator+=(const Vector &a) {
 // return a new vector that is the component-wise subtraction of 2 vectors
 Vector &Vector::operator-=(const Vector &b) {
     if (this != &b) {
-        x_ -= b.x_;
-        y_ -= b.y_;
-        z_ -= b.z_;
+        xyz_[0] += b.xyz_[0];
+        xyz_[1] += b.xyz_[1];
+        xyz_[2] += b.xyz_[2];
     }
     return *this;
 }
 
 // produce the inner product of two vectors.
-float Vector::vector_product(const Vector &c) const {
-    return x_ * c.x_ + y_ * c.y_ + z_ * c.z_;
+float operator*(const Vector &v1, const Vector &v2) {
+    return v1.xyz_[0] * v2.xyz_[0] + v1.xyz_[1] * v2.xyz_[1] + v1.xyz_[2] * v2.xyz_[2];
 }
+
+Vector operator*(const float &k, const Vector &v1) {
+    return Vector{k * v1.xyz_[0], k * v1.xyz_[1], k * v1.xyz_[2]};
+}
+
+Vector operator+(const Vector &v1, const Vector &v2) {
+    return Vector{v1.xyz_[0] + v2.xyz_[0], v1.xyz_[1] + v2.xyz_[1], v1.xyz_[2] + v2.xyz_[2]};
+}
+
+Vector operator-(const Vector &v1, const Vector &v2) {
+    return Vector{v1.xyz_[0] - v2.xyz_[0], v1.xyz_[1] - v2.xyz_[1], v1.xyz_[2] - v2.xyz_[2]};
+}
+
+std::ostream& operator<<(std::ostream& out, const Vector &v) {
+    out << "(" << v.xyz_[0] << "," << v.xyz_[1] << "," << v.xyz_[2] << ")";
+    return out;
+}
+} // namespace vector333
