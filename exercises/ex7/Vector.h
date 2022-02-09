@@ -17,29 +17,27 @@
 namespace vector333 {
 class Vector {
  public:
-    Vector(); // default constructor
+    Vector();  // default constructor
     // constructor with three arguments
     Vector(const float x, const float y, const float z);
     Vector(const Vector &copyme);           // copy constructor
-    //float get_x() const { return xyz_[0]; }      // inline member function
-    //float get_y() const { return xyz_[1]; }      // inline member function
-    //float get_z() const { return xyz_[2]; }      // inline member function
     ~Vector();                              // destructor
     Vector &operator=(const Vector &rhs);   // asginment operator
     Vector &operator+=(const Vector &a);    // addtion of the vector
     Vector &operator-=(const Vector &b);    // subtraction of the vector
-    // produce the inner product of two vectors.
-    //float vector_product(const Vector &c) const;
-
+    // udating assignments on vector.
     friend Vector operator+(const Vector &v1, const Vector &v2);
     friend Vector operator-(const Vector &v1, const Vector &v2);
+    // compute the inner product of two vectors.
     friend float operator*(const Vector &v1, const Vector &v2);
+    // Vector multiplication.
     friend Vector operator*(const float &k, const Vector &v1);
+    // stream output vector.
     friend std::ostream& operator<<(std::ostream& out, const Vector &v);
  private:
     float* xyz_;  // data member
 };  // class Vector
 
-} // namespace vector333
+}  // namespace vector333
 
 #endif  // VECTOR_H_./ex

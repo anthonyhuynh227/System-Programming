@@ -68,7 +68,8 @@ Vector &Vector::operator-=(const Vector &b) {
 
 // produce the inner product of two vectors.
 float operator*(const Vector &v1, const Vector &v2) {
-    return v1.xyz_[0] * v2.xyz_[0] + v1.xyz_[1] * v2.xyz_[1] + v1.xyz_[2] * v2.xyz_[2];
+    return v1.xyz_[0] * v2.xyz_[0] +
+            v1.xyz_[1] * v2.xyz_[1] + v1.xyz_[2] * v2.xyz_[2];
 }
 
 Vector operator*(const float &k, const Vector &v1) {
@@ -76,15 +77,17 @@ Vector operator*(const float &k, const Vector &v1) {
 }
 
 Vector operator+(const Vector &v1, const Vector &v2) {
-    return Vector{v1.xyz_[0] + v2.xyz_[0], v1.xyz_[1] + v2.xyz_[1], v1.xyz_[2] + v2.xyz_[2]};
+    return Vector{v1.xyz_[0] +
+            v2.xyz_[0], v1.xyz_[1] + v2.xyz_[1], v1.xyz_[2] + v2.xyz_[2]};
 }
 
 Vector operator-(const Vector &v1, const Vector &v2) {
-    return Vector{v1.xyz_[0] - v2.xyz_[0], v1.xyz_[1] - v2.xyz_[1], v1.xyz_[2] - v2.xyz_[2]};
+    return Vector{v1.xyz_[0] -
+        v2.xyz_[0], v1.xyz_[1] - v2.xyz_[1], v1.xyz_[2] - v2.xyz_[2]};
 }
 
 std::ostream& operator<<(std::ostream& out, const Vector &v) {
     out << "(" << v.xyz_[0] << "," << v.xyz_[1] << "," << v.xyz_[2] << ")";
     return out;
 }
-} // namespace vector333
+}  // namespace vector333

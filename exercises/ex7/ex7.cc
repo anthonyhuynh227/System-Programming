@@ -12,8 +12,9 @@
 #include <iostream>
 #include "Vector.h"
 
-using namespace vector333;
-using namespace std;
+using vector333::Vector;
+using std::cout;
+using std::endl;
 int main() {
     // checks default constructor
     Vector vectorA(1.0, 2.0, 3.0);
