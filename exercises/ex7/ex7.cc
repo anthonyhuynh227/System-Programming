@@ -16,18 +16,54 @@ using vector333::Vector;
 using std::cout;
 using std::endl;
 int main() {
-    // checks default constructor
+    // tests default constructor
+    // expected output: 
+    // (0, 0, 0)
+    Vector zero_vector;
+    cout << zero_vector << endl;
+
+    // checks three arg constructor
     Vector vectorA(1.0, 2.0, 3.0);
     Vector vectorB(5.0, 6.0, 7.0);
+    cout << vectorA << endl;
+    cout << vectorB << endl;
+    // expected output:
+    // (1, 2, 3)
+    // (5, 6, 7)
+
+    // checks addition overload
     Vector vectorC = vectorA + vectorB;
     cout << vectorC << endl;
+    // expected output:
+    // (6, 8, 10)
 
+    // checks subtraction overload
     Vector vectorD = vectorC - vectorA;
     cout << vectorD << endl;
+    // expected output:
+    // (5, 6, 7)
 
+    // checks vector multiplication overload
     float answerE = vectorD * vectorA;
     cout << answerE << endl;
+    // expected output:
+    // 38
 
+    // checks scalar multiplication overload
     Vector answerF = 4 * vectorB;
     cout << answerF << endl;
+    // expected output:
+    // (20, 24, 28)
+
+    // checks addition assignment overload
+    vectorC += vectorD;
+    cout << vectorC << endl;
+    // expected output:
+    // (11, 14, 17)
+
+    // checks subtraction assignment overload
+    vectorB -= vectorA;
+    cout << vectorB << endl;
+    // expected output:
+    // (4, 4, 4)
 }

@@ -59,9 +59,9 @@ Vector &Vector::operator+=(const Vector &a) {
 // return a new vector that is the component-wise subtraction of 2 vectors
 Vector &Vector::operator-=(const Vector &b) {
     if (this != &b) {
-        xyz_[0] += b.xyz_[0];
-        xyz_[1] += b.xyz_[1];
-        xyz_[2] += b.xyz_[2];
+        xyz_[0] -= b.xyz_[0];
+        xyz_[1] -= b.xyz_[1];
+        xyz_[2] -= b.xyz_[2];
     }
     return *this;
 }
@@ -73,16 +73,16 @@ float operator*(const Vector &v1, const Vector &v2) {
 }
 
 Vector operator*(const float &k, const Vector &v1) {
-    return Vector{k * v1.xyz_[0], k * v1.xyz_[1], k * v1.xyz_[2]};
+    return Vector {k * v1.xyz_[0], k * v1.xyz_[1], k * v1.xyz_[2]};
 }
 
 Vector operator+(const Vector &v1, const Vector &v2) {
-    return Vector{v1.xyz_[0] +
-            v2.xyz_[0], v1.xyz_[1] + v2.xyz_[1], v1.xyz_[2] + v2.xyz_[2]};
+    return Vector {v1.xyz_[0] +
+            v2.xyz_[0], v1.xyz_[1] + v2.xyz_[1], v1.xyz_[2] + v2.xyz_[2] };
 }
 
 Vector operator-(const Vector &v1, const Vector &v2) {
-    return Vector{v1.xyz_[0] -
+    return Vector {v1.xyz_[0] -
         v2.xyz_[0], v1.xyz_[1] - v2.xyz_[1], v1.xyz_[2] - v2.xyz_[2]};
 }
 

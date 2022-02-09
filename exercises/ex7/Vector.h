@@ -22,17 +22,17 @@ class Vector {
     Vector(const float x, const float y, const float z);
     Vector(const Vector &copyme);           // copy constructor
     ~Vector();                              // destructor
-    Vector &operator=(const Vector &rhs);   // asginment operator
-    Vector &operator+=(const Vector &a);    // addtion of the vector
+    Vector &operator=(const Vector &rhs);   // assignment operator
+    Vector &operator+=(const Vector &a);    // addition of the vector
     Vector &operator-=(const Vector &b);    // subtraction of the vector
-    // udating assignments on vector.
+    // updating arithmetic operators on vectors.
     friend Vector operator+(const Vector &v1, const Vector &v2);
     friend Vector operator-(const Vector &v1, const Vector &v2);
     // compute the inner product of two vectors.
     friend float operator*(const Vector &v1, const Vector &v2);
-    // Vector multiplication.
+    // Vector multiplication with scalar.
     friend Vector operator*(const float &k, const Vector &v1);
-    // stream output vector.
+    // Output stream vector.
     friend std::ostream& operator<<(std::ostream& out, const Vector &v);
  private:
     float* xyz_;  // data member
