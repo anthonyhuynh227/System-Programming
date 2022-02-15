@@ -17,7 +17,7 @@ using std::cout;
 using std::endl;
 int main() {
     // tests default constructor
-    // expected output: 
+    // expected output:
     // (0, 0, 0)
     Vector zero_vector;
     cout << zero_vector << endl;
