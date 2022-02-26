@@ -46,6 +46,7 @@ bool DocTableReader::LookupDocID(const DocID_t& doc_id,
     // STEP 1.
     // Slurp the next docid out of the element.
     DoctableElementHeader curr_header;
+    fseek(file_, n);
 
 
     // Is it a match?
