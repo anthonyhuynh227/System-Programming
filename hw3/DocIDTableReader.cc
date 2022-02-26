@@ -45,8 +45,9 @@ bool DocIDTableReader::LookupDocID(
     // STEP 1.
     // Slurp the next docid out of the current element.
     DocIDElementHeader curr_header;
-
-
+    fseek(file_, curr_element, SEEK_SET);
+    fread(&curr_header, sizeof(DocIDElementHeader), 1, file_);
+    curr_header.ToHostFormat();
     // Is it a match?
     if (curr_header.doc_id == doc_id) {
       // STEP 2.
@@ -54,6 +55,12 @@ bool DocIDTableReader::LookupDocID(
       // std::list<DocPositionOffset_t>.  Be sure to push in the right
       // order, adding to the end of the list as you extract
       // successive positions.
+      DocIDElementPosition word;
+      for (int i = 0; i < curr_header.num_positions; i++) {
+        fread(&word, sizeof(DocIDElementPosition), 1, file_);
+        word.ToHostFormat();
+        ret_val->push_back(word.position);
+      }
 
 
       // STEP 3.
@@ -75,17 +82,21 @@ list<DocIDElementHeader> DocIDTableReader::GetDocIDList() const {
   // Go through *all* of the buckets of this hashtable, extracting
   // out the docids in each element and the number of word positions
   // for the each docid.
+  int bucket_offset;
   for (int i = 0; i < header_.num_buckets; i++) {
     // STEP 4.
     // Seek to the next BucketRecord.  The "offset_" member
     // variable stores the offset of this docid table within
     // the index file.
-
+    bucket_offset = offset_ + sizeof(BucketListHeader) + (i * sizeof(BucketRecord));
+    fseek(file_, bucket_offset, SEEK_SET);
 
     // STEP 5.
     // Read in the chain length and bucket position fields from
     // the bucket_rec.
     BucketRecord bucket_rec;
+    fread(&bucket_rec, sizeof(BucketRecord), 1, file_);
+    bucket_rec.ToHostFormat();
 
 
     // Sweep through the next bucket, iterating through each
@@ -100,11 +111,14 @@ list<DocIDElementHeader> DocIDTableReader::GetDocIDList() const {
       // Read the next element position from the bucket header.
       // and seek to the element itself.
       ElementPositionRecord element_pos;
-
+      fread(&element_pos, sizeof(ElementPositionRecord), 1, file_);
+      element_pos.ToHostFormat();
 
       // STEP 7.
       // Read in the docid and number of positions from the element.
       DocIDElementHeader element;
+      fread(&element, sizeof(DocIDElementHeader), 1, file_);
+      element.ToHostFormat();
 
 
       // Append it to our result list.
