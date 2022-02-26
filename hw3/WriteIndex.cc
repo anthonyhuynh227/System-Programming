@@ -235,7 +235,7 @@ static int WriteHeader(FILE* f, int doctable_bytes, int memidx_bytes) {
   if (fseek(f, sizeof(IndexFileHeader), SEEK_SET) != 0) {
     return kFailedWrite;
   }
-  char buffer = 'a';
+  char buffer;
   for (int i = 0; i < (doctable_bytes + memidx_bytes); i++) {
     fread(&buffer, 1,1,f);
     crc.FoldByteIntoCRC((uint8_t) buffer);
@@ -292,9 +292,10 @@ static int WriteHashTable(FILE* f, IndexFileOffset_t offset, HashTable* ht,
   // Be sure to handle the corner case where the bucket's chain is
   // empty.  For that case, you still have to write a record for the
   // bucket, but you won't write a bucket.
-  int bucket_size = 0;
+  
   for (int i = 0; i < ht->num_buckets; i++) {
     // STEP 4.
+    int bucket_size = 0;
     LinkedList* bucket = ht->buckets[i];
     // checks if there is no element in this bucket.
     // only write bucket record but no bucket
@@ -377,9 +378,15 @@ static int WriteHTBucket(FILE* f, IndexFileOffset_t offset, LinkedList* li,
 
     // STEP 8.
     // Write the element itself, using fn.
+<<<<<<< HEAD
     HTKeyValue_t kv;
     LLIterator_Get(it, (LLPayload_t*) &kv);
     int element_bytes = fn(f, element_pos, &kv);
+=======
+    HTKeyValue_t* kv;
+    LLIterator_Get(it, (LLPayload_t*) &kv);
+    int element_bytes = fn(f, element_pos, kv);
+>>>>>>> 7ab3d6aaf532d7e0f075b69f027ce0e4d08686a5
     if (element_bytes == kFailedWrite) { 
       return kFailedWrite;
     }
@@ -468,7 +475,6 @@ static int WriteDocIDToPositionListFn(FILE* f,
   for (int i = 0; i < num_positions; i++) {
     // STEP 13.
     // Get the next position from the list.
-    HTKeyValue_t* keyValue;
     LLIterator_Get(it,(void**) &position);
 
     // STEP 14.
@@ -485,7 +491,7 @@ static int WriteDocIDToPositionListFn(FILE* f,
 
   // STEP 15.
   // Calculate and return the total amount of data written.
-  return sizeof(DocIDElementHeader) + num_positions*sizeof(DocIDElementPosition) ;  // you may want to change this
+  return sizeof(DocIDElementHeader) + num_positions * sizeof(DocIDElementPosition) ;  // you may want to change this
 }
 
 // This write_element_fn is used to write a WordPostings
