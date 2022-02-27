@@ -372,6 +372,7 @@ static int WriteHTBucket(FILE* f, IndexFileOffset_t offset, LinkedList* li,
     if (fseek(f, record_pos, SEEK_SET) != 0) {
       return kFailedWrite;
     }
+    element_Position.ToDiskFormat();
     if (fwrite(&element_Position, sizeof(ElementPositionRecord), 1, f) != 1) {
       return kFailedWrite;
     }
@@ -427,7 +428,7 @@ static int WriteDocidToDocnameFn(FILE* f, IndexFileOffset_t offset,
   // string, just the characters, since we've already written a length
   // field for the string.
   char* filename = (char*) (kv->value);
-  if (fwrite(filename, 1,  file_name_bytes, f) != 1) {
+  if (fwrite(filename, file_name_bytes,  1, f) != 1) {
     return kFailedWrite;
   }
 
@@ -518,17 +519,17 @@ static int WriteWordToPostingsFn(FILE* f,
   // Write the header, in network order, in the right place in the file.
   WordPostingsHeader header(word_bytes, ht_bytes);
   header.ToDiskFormat();
-
-  // STEP 18.
-  // Write the word itself, excluding the null terminator, in the right
-  // place in the file.
   if (fseek(f, offset, SEEK_SET) != 0) {
     return kFailedWrite;
-  }
+  } 
   if (fwrite(&header, sizeof(WordPostingsHeader), 1, f) != 1) {
     return kFailedWrite;
   }
-  if (fwrite(wp->word, 1, word_bytes, f) != 1) {
+  // STEP 18.
+  // Write the word itself, excluding the null terminator, in the right
+  // place in the file.
+  
+  if (fwrite(wp->word, word_bytes, 1, f) != 1) {
     return kFailedWrite;
   }
   // STEP 19.
