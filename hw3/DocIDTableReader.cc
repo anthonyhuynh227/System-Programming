@@ -57,7 +57,7 @@ bool DocIDTableReader::LookupDocID(
       // successive positions.
       DocIDElementPosition word;
       for (int i = 0; i < curr_header.num_positions; i++) {
-        fread(&word, sizeof(DocIDElementPosition), 1, file_);
+        Verify333(fread(&word, sizeof(DocIDElementPosition), 1, file_) == 1);
         word.ToHostFormat();
         ret_val->push_back(word.position);
       }
@@ -105,7 +105,7 @@ list<DocIDElementHeader> DocIDTableReader::GetDocIDList() const {
     for (int j = 0; j < bucket_rec.chain_num_elements; j++) {
       // Seek to chain element's position field in the bucket header.
       element_offset = bucket_rec.position + j * sizeof(ElementPositionRecord);
-      Verify333(fseek(file_, element_offset, SEEK_SET) == 0);
+      fseek(file_, element_offset, SEEK_SET);
 
       // STEP 6.
       // Read the next element position from the bucket header.
@@ -113,6 +113,7 @@ list<DocIDElementHeader> DocIDTableReader::GetDocIDList() const {
       ElementPositionRecord element_pos;
       fread(&element_pos, sizeof(ElementPositionRecord), 1, file_);
       element_pos.ToHostFormat();
+      fseek(file_, element_pos.position, SEEK_SET);
 
       // STEP 7.
       // Read in the docid and number of positions from the element.
