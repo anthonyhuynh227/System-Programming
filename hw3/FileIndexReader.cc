@@ -35,15 +35,16 @@ FileIndexReader::FileIndexReader(const string& file_name,
 
   // STEP 1.
   // Make the (FILE*) be unbuffered.  ("man setbuf")
-
+  setbuf(file_, NULL);
 
   // STEP 2.
   // Read the entire file header and convert to host format.
-
+  int read_res = fread(&header_, sizeof(IndexFileHeader), 1, file_);
+  header_.ToHostFormat();
 
   // STEP 3.
   // Verify that the magic number is correct.  Crash if not.
-
+  Verify333(header_.magic_number == 0xCAFEF00D);
 
   // Make sure the index file's length lines up with the header fields.
   struct stat f_stat;
@@ -68,6 +69,9 @@ FileIndexReader::FileIndexReader(const string& file_name,
       // You should only need to modify code inside the while loop for
       // this step. Remember that file_ is now unbuffered, so care needs
       // to be put into how the file is sequentially read
+      read_res = fread(buf, 1, 1, file_);
+      crc_obj.FoldByteIntoCRC(buf[0]);
+      left_to_read--;
     }
     Verify333(crc_obj.GetFinalCRC() == header_.checksum);
   }

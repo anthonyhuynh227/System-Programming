@@ -379,9 +379,15 @@ static int WriteHTBucket(FILE* f, IndexFileOffset_t offset, LinkedList* li,
 
     // STEP 8.
     // Write the element itself, using fn.
+<<<<<<< HEAD
+    HTKeyValue_t kv;
+    LLIterator_Get(it, (LLPayload_t*) &kv);
+    int element_bytes = fn(f, element_pos, &kv);
+=======
     HTKeyValue_t* kv;
     LLIterator_Get(it, (LLPayload_t*) &kv);
     int element_bytes = fn(f, element_pos, kv);
+>>>>>>> 7ab3d6aaf532d7e0f075b69f027ce0e4d08686a5
     if (element_bytes == kFailedWrite) { 
       return kFailedWrite;
     }
