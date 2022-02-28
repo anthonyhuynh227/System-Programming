@@ -10,6 +10,9 @@
  */
 
 #include "./QueryProcessor.h"
+#include <sys/types.h>
+#include <stdint.h>
+#include <unistd.h>
 
 #include <iostream>
 #include <algorithm>
@@ -18,9 +21,7 @@
 #include <string>
 #include <vector>
 
-#include <sys/types.h>
-#include <stdint.h>
-#include <unistd.h>
+
 #include <sstream>
 
 extern "C" {
@@ -91,10 +92,10 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
   // (the only step in this file)
   vector<QueryProcessor::QueryResult> final_result;
 
-  DocTableReader* doc_table_reader; // per index iteration (i)
-  IndexTableReader* index_table_reader; // per index iteration (i)
-  DocIDTableReader* doc_id_table_reader; // per word in index iteration (j)
-  
+  DocTableReader* doc_table_reader;  // per index iteration (i)
+  IndexTableReader* index_table_reader;  // per index iteration (i)
+  DocIDTableReader* doc_id_table_reader;  // per word in index iteration (j)
+  list<DocIDTableReader*> delete_doc_ID_tables;
   // iterate through list of index files
   for (int i = 0; i < array_len_; i++) {
     // get corresponding doctablereader and indextable reader for this file
@@ -103,7 +104,7 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
 
     list<DocIDTableReader*> doc_ID_tables;
     set<DocID_t> doc_IDs;
-    list<DocIDElementHeader> ID_headers; // headers for this ID
+    list<DocIDElementHeader> ID_headers;  // headers for this ID
     // iterate through list of words in query
     for (uint j = 0; j < query.size(); j++) {
       doc_id_table_reader = index_table_reader->LookupWord(query[j]);
@@ -116,6 +117,7 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
       // it was found in the index...
       // add doc ID table
       doc_ID_tables.push_back(doc_id_table_reader);
+      delete_doc_ID_tables.push_back(doc_id_table_reader);
 
       // add headers in this doc id list to Doc ID set
       for (DocIDElementHeader header : doc_id_table_reader->GetDocIDList()) {
@@ -126,11 +128,12 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
 
     // look at doc ID list, if its empty go to next index file.
     if (doc_ID_tables.empty()) {
-      std::cout << "    MOVING TO NEXT INDEX..." << std::endl;
+      doc_ID_tables.clear();
       continue;
     }
 
-    // iterate through doc IDs, make sure that all document IDs that get added to final result exist in
+    // iterate through doc IDs,
+    // make sure that all document IDs that get added to final result exist in
     // all of the doc ID tables
     list<DocIDElementHeader> ID_headers_final;
     for (DocID_t id : doc_IDs) {
@@ -175,6 +178,10 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
       }
     }
   }
+  for (DocIDTableReader* element : delete_doc_ID_tables) {
+      delete element;
+  }
+  delete_doc_ID_tables.clear();
 
   // Sort the final results.
   sort(final_result.begin(), final_result.end());
