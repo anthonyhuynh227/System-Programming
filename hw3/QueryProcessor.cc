@@ -126,7 +126,6 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
 
     // look at doc ID list, if its empty go to next index file.
     if (doc_ID_tables.empty()) {
-      std::cout << "    MOVING TO NEXT INDEX..." << std::endl;
       continue;
     }
 
