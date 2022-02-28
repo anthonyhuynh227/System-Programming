@@ -30,7 +30,7 @@ HashTableReader::HashTableReader(FILE* f, IndexFileOffset_t offset)
   // STEP 1.
   // fread() the bucket list header in this hashtable from its
   // "num_buckets" field, and convert to host byte order.
-  
+
   // set stream to offset
   fseek(file_, offset, SEEK_SET);
   // read file and put into header field
@@ -51,8 +51,8 @@ HashTableReader::LookupElementPositions(HTKey_t hash_key) const {
   int bucket_num = hash_key % header_.num_buckets;
 
   // Figure out the offset of the "bucket_rec" field for this bucket.
-  IndexFileOffset_t bucket_rec_offset = 
-      offset_ + sizeof(BucketListHeader) + sizeof(BucketRecord) * bucket_num;
+  IndexFileOffset_t bucket_rec_offset =
+    offset_ + sizeof(BucketListHeader) + sizeof(BucketRecord) * bucket_num;
 
   // STEP 2.
   // Read the "chain len" and "bucket position" fields from the

@@ -11,16 +11,22 @@
 
 #include <cstdlib>    // for EXIT_SUCCESS, EXIT_FAILURE
 #include <iostream>   // for std::cout, std::cerr, etc.
+#include <sstream>
 
 #include "./QueryProcessor.h"
 
+using hw3::QueryProcessor;
 using std::cerr;
 using std::endl;
-
+using std::cout;
+using std::istringstream;
+using std::cin;
 // Error usage message for the client to see
 // Arguments:
 // - prog_name: Name of the program
 static void Usage(char* prog_name);
+
+static void PrintResults(const vector<QueryProcessor::QueryResult> &results);
 
 // Your job is to implement the entire filesearchshell.cc
 // functionality. We're essentially giving you a blank screen to work
@@ -83,10 +89,42 @@ int main(int argc, char** argv) {
     Usage(argv[0]);
   }
 
+  list<string> index_list;
+
+  for (int i = 1; i < argc; i++) {
+    index_list.push_back(argv[i]);
+  }
+
+  QueryProcessor qp(index_list);
+
   // STEP 1:
   // Implement filesearchshell!
   // Probably want to write some helper methods ...
-  while (1) { }
+  while (true) {
+    cout << "Enter query:" << endl;
+    string word_line;
+    getline(cin, word_line);
+
+    if (cin.eof()) {
+      break;
+    }
+
+    // words to lowercase
+    for (uint i = 0; i < word_line.length(); i++) {
+      word_line[i] = tolower(word_line[i]);
+    }
+
+    // break up line of words into list of words
+    vector<string> words;
+    string word;
+    istringstream iss(word_line);
+    while (iss >> word) {
+      words.push_back(word);
+    }
+
+    vector<QueryProcessor::QueryResult> results = qp.ProcessQuery(words);
+    PrintResults(results);
+  }
 
   return EXIT_SUCCESS;
 }
@@ -94,4 +132,13 @@ int main(int argc, char** argv) {
 static void Usage(char* prog_name) {
   cerr << "Usage: " << prog_name << " [index files+]" << endl;
   exit(EXIT_FAILURE);
+}
+
+static void PrintResults(const vector<QueryProcessor::QueryResult> &results) {
+  if (results.empty()) {
+    cout << "  [no results]" << endl;
+  }
+  for (QueryProcessor::QueryResult r : results) {
+    cout << "  " << r.document_name << " (" << r.rank << ")" << endl;
+  }
 }

@@ -128,7 +128,10 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
 
     // look at doc ID list, if its empty go to next index file.
     if (doc_ID_tables.empty()) {
+<<<<<<< HEAD
       doc_ID_tables.clear();
+=======
+>>>>>>> 6278115c33cc735d41cb70284354328f23c854a5
       continue;
     }
 

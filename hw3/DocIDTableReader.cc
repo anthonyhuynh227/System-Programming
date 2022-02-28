@@ -88,7 +88,8 @@ list<DocIDElementHeader> DocIDTableReader::GetDocIDList() const {
     // Seek to the next BucketRecord.  The "offset_" member
     // variable stores the offset of this docid table within
     // the index file.
-    bucket_offset = offset_ + sizeof(BucketListHeader) + (i * sizeof(BucketRecord));
+    bucket_offset = offset_ + sizeof(BucketListHeader)
+                  + (i * sizeof(BucketRecord));
     fseek(file_, bucket_offset, SEEK_SET);
 
     // STEP 5.
