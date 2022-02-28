@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
     cout << "Enter query:" << endl;
     string word_line;
     getline(cin, word_line);
-    
+
     if (cin.eof()) {
       break;
     }
@@ -114,10 +114,11 @@ int main(int argc, char** argv) {
       word_line[i] = tolower(word_line[i]);
     }
 
+    // break up line of words into list of words
     vector<string> words;
     string word;
     istringstream iss(word_line);
-    while(iss >> word) {
+    while (iss >> word) {
       words.push_back(word);
     }
 

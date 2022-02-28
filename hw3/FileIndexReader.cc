@@ -39,7 +39,7 @@ FileIndexReader::FileIndexReader(const string& file_name,
 
   // STEP 2.
   // Read the entire file header and convert to host format.
-  int read_res = fread(&header_, sizeof(IndexFileHeader), 1, file_);
+  fread(&header_, sizeof(IndexFileHeader), 1, file_);
   header_.ToHostFormat();
 
   // STEP 3.
@@ -51,9 +51,7 @@ FileIndexReader::FileIndexReader(const string& file_name,
   Verify333(stat(file_name_.c_str(), &f_stat) == 0);
   Verify333(
     f_stat.st_size == static_cast<unsigned int>(
-      sizeof(IndexFileHeader) + header_.doctable_bytes + header_.index_bytes
-    )
-  );
+      sizeof(IndexFileHeader) + header_.doctable_bytes + header_.index_bytes));
 
   if (validate) {
     // Re-calculate the checksum, make sure it matches that in the header.
@@ -69,7 +67,7 @@ FileIndexReader::FileIndexReader(const string& file_name,
       // You should only need to modify code inside the while loop for
       // this step. Remember that file_ is now unbuffered, so care needs
       // to be put into how the file is sequentially read
-      read_res = fread(buf, 1, 1, file_);
+      fread(buf, 1, 1, file_);
       crc_obj.FoldByteIntoCRC(buf[0]);
       left_to_read--;
     }

@@ -66,7 +66,7 @@ bool DocTableReader::LookupDocID(const DocID_t& doc_id,
       // and return it through the output parameter ret_str.  Return
       // true.
       *ret_str = ss.str();
-      
+
       return true;
     }
   }
