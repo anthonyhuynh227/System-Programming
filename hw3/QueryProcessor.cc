@@ -92,7 +92,7 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
 
     list<DocIDElementHeader> ID_headers = {}; // headers for this ID
     // iterate through list of words in query
-    for (uint j = 0; i < query.size(); j++) {
+    for (uint j = 0; j < query.size(); j++) {
       doc_id_table_reader = index_table_reader->LookupWord(query[j]);
       if (doc_id_table_reader == NULL) {
         // no match found so move onto next index file
