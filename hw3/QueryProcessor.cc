@@ -107,7 +107,7 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
     for (uint j = 0; j < query.size(); j++) {
       std::cout << "        GETTING DOCIDTABLE READER FOR " << j << std::endl;
       doc_id_table_reader = index_table_reader->LookupWord(query[j]);
-      if (doc_id_table_reader == NULL) {
+      if (doc_id_table_reader == nullptr) {
         // no match found so move onto next index file
         // clear ID headers (all words in query must be present in document)
         std::cout << "            CLEARING HEADERS" << std::endl;
@@ -118,7 +118,7 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
       // add headers in this doc id list to word list
       for (DocIDElementHeader header : doc_id_table_reader->GetDocIDList()) {
         ID_headers.push_back(header);
-        std::cout << "            ADDED HEADER" << std::endl;
+        std::cout << "            ADDED HEADER FOR WORD " << query[j] << std::endl;
       }
     }
 
@@ -130,18 +130,26 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
       // if there were results for this doc id, then we go and
       // use the data from the headers for the list of queryresults
       for (DocIDElementHeader header : ID_headers) {
-        std::cout << "       ATTEMPTING TO WRITE QUERYRESULT" << std::endl;
         QueryResult result;
+        bool found_result = false;
         // convert docID to filename, write to query result
-        std::cout << "           ATTEMPTING TO WRITE DOCNAME" << std::endl;
-        Verify333(doc_table_reader->LookupDocID(header.doc_id, &result.document_name) == true);
-        
+        doc_table_reader->LookupDocID(header.doc_id, &result.document_name);
+        std::cout << "    DOCUMENT NAME: " << result.document_name << std::endl;
         // update rank for document
-        std::cout << "           ATTEMPTING TO WRITE RANK" << std::endl;
         result.rank = header.num_positions;
-        // put queryresult in final list
-        std::cout << "           ATTEMPTING TO ADD QUERYRESULT TO FINAL" << std::endl;
-        final_result.push_back(result);
+
+        for (QueryResult res : final_result) {
+          if (res.document_name.compare(result.document_name)) {
+            res.rank += result.rank;
+            found_result = true;
+            break;
+          }
+        }
+
+        if (!found_result) {
+          // add new query result to final list
+          final_result.push_back(result);
+        }
       }
     }
   }
