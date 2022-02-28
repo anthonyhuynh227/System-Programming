@@ -80,6 +80,51 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
   // (the only step in this file)
   vector<QueryProcessor::QueryResult> final_result;
 
+  DocTableReader* doc_table_reader; // per index iteration (i)
+  IndexTableReader* index_table_reader; // per index iteration (i)
+  DocIDTableReader* doc_id_table_reader; // per word in index iteration (j)
+  
+  // iterate through list of index files
+  for (int i = 0; i < array_len_; i++) {
+    // get corresponding doctablereader and indextable reader for this file
+    doc_table_reader = dtr_array_[i];
+    index_table_reader = itr_array_[i];
+
+    list<DocIDElementHeader> ID_headers = {}; // headers for this ID
+    // iterate through list of words in query
+    for (uint j = 0; i < query.size(); j++) {
+      doc_id_table_reader = index_table_reader->LookupWord(query[j]);
+      if (doc_id_table_reader == NULL) {
+        // no match found so move onto next index file
+        // clear ID headers (all words in query must be present in document)
+        ID_headers.clear();
+        break;
+      }
+      // it was found...
+      // add headers in this doc id list to word list
+      for (DocIDElementHeader header : doc_id_table_reader->GetDocIDList()) {
+        ID_headers.push_back(header);
+      }
+    }
+
+    // look at doc ID list, if its empty go to next index file.
+    if (ID_headers.size() == 0) {
+      continue;
+    } else {
+      // if there were results for this doc id, then we go and
+      // use the data from the headers for the list of queryresults
+      for (DocIDElementHeader header : ID_headers) {
+        QueryResult result;
+        // convert docID to filename, write to query result
+        Verify333(doc_table_reader->LookupDocID(header.doc_id, &result.document_name) == true);
+        
+        // update rank for document
+        result.rank = header.num_positions;
+        // put queryresult in final list
+        final_result.push_back(result);
+      }
+    }
+  }
 
   // Sort the final results.
   sort(final_result.begin(), final_result.end());
