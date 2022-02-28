@@ -17,6 +17,11 @@
 #include <string>
 #include <vector>
 
+#include <sys/types.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <sstream>
+
 extern "C" {
   #include "./libhw1/CSE333.h"
 }
@@ -25,6 +30,10 @@ using std::list;
 using std::sort;
 using std::string;
 using std::vector;
+
+using std::cout;
+using std::endl;
+using std::stringstream;
 
 namespace hw3 {
 
@@ -86,17 +95,22 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
   
   // iterate through list of index files
   for (int i = 0; i < array_len_; i++) {
+    std::cout << "    GETTING DOCTABLE READER FOR " << i << std::endl;
     // get corresponding doctablereader and indextable reader for this file
     doc_table_reader = dtr_array_[i];
+    std::cout << "    GETTING INDEXTABLE READER FOR " << i << std::endl;
     index_table_reader = itr_array_[i];
 
+    std::cout << "    QUERY SIZE: " << query.size() << std::endl;
     list<DocIDElementHeader> ID_headers = {}; // headers for this ID
     // iterate through list of words in query
-    for (uint j = 0; i < query.size(); j++) {
+    for (uint j = 0; j < query.size(); j++) {
+      std::cout << "        GETTING DOCIDTABLE READER FOR " << j << std::endl;
       doc_id_table_reader = index_table_reader->LookupWord(query[j]);
       if (doc_id_table_reader == NULL) {
         // no match found so move onto next index file
         // clear ID headers (all words in query must be present in document)
+        std::cout << "            CLEARING HEADERS" << std::endl;
         ID_headers.clear();
         break;
       }
@@ -104,23 +118,29 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
       // add headers in this doc id list to word list
       for (DocIDElementHeader header : doc_id_table_reader->GetDocIDList()) {
         ID_headers.push_back(header);
+        std::cout << "            ADDED HEADER" << std::endl;
       }
     }
 
     // look at doc ID list, if its empty go to next index file.
-    if (ID_headers.size() == 0) {
+    if (ID_headers.empty()) {
+      std::cout << "    MOVING TO NEXT INDEX..." << std::endl;
       continue;
     } else {
       // if there were results for this doc id, then we go and
       // use the data from the headers for the list of queryresults
       for (DocIDElementHeader header : ID_headers) {
+        std::cout << "       ATTEMPTING TO WRITE QUERYRESULT" << std::endl;
         QueryResult result;
         // convert docID to filename, write to query result
+        std::cout << "           ATTEMPTING TO WRITE DOCNAME" << std::endl;
         Verify333(doc_table_reader->LookupDocID(header.doc_id, &result.document_name) == true);
         
         // update rank for document
+        std::cout << "           ATTEMPTING TO WRITE RANK" << std::endl;
         result.rank = header.num_positions;
         // put queryresult in final list
+        std::cout << "           ATTEMPTING TO ADD QUERYRESULT TO FINAL" << std::endl;
         final_result.push_back(result);
       }
     }
