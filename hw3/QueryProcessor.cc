@@ -14,17 +14,28 @@
 #include <iostream>
 #include <algorithm>
 #include <list>
+#include <set>
 #include <string>
 #include <vector>
+
+#include <sys/types.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <sstream>
 
 extern "C" {
   #include "./libhw1/CSE333.h"
 }
 
 using std::list;
+using std::set;
 using std::sort;
 using std::string;
 using std::vector;
+
+using std::cout;
+using std::endl;
+using std::stringstream;
 
 namespace hw3 {
 
@@ -90,37 +101,76 @@ QueryProcessor::ProcessQuery(const vector<string>& query) const {
     doc_table_reader = dtr_array_[i];
     index_table_reader = itr_array_[i];
 
-    list<DocIDElementHeader> ID_headers = {}; // headers for this ID
+    list<DocIDTableReader*> doc_ID_tables;
+    set<DocID_t> doc_IDs;
+    list<DocIDElementHeader> ID_headers; // headers for this ID
     // iterate through list of words in query
     for (uint j = 0; j < query.size(); j++) {
       doc_id_table_reader = index_table_reader->LookupWord(query[j]);
-      if (doc_id_table_reader == NULL) {
+      if (doc_id_table_reader == nullptr) {
         // no match found so move onto next index file
         // clear ID headers (all words in query must be present in document)
-        ID_headers.clear();
+        doc_ID_tables.clear();
         break;
       }
-      // it was found...
-      // add headers in this doc id list to word list
+      // it was found in the index...
+      // add doc ID table
+      doc_ID_tables.push_back(doc_id_table_reader);
+
+      // add headers in this doc id list to Doc ID set
       for (DocIDElementHeader header : doc_id_table_reader->GetDocIDList()) {
+        doc_IDs.insert(header.doc_id);
         ID_headers.push_back(header);
       }
     }
 
     // look at doc ID list, if its empty go to next index file.
-    if (ID_headers.size() == 0) {
+    if (doc_ID_tables.empty()) {
+      std::cout << "    MOVING TO NEXT INDEX..." << std::endl;
       continue;
-    } else {
-      // if there were results for this doc id, then we go and
-      // use the data from the headers for the list of queryresults
-      for (DocIDElementHeader header : ID_headers) {
-        QueryResult result;
-        // convert docID to filename, write to query result
-        Verify333(doc_table_reader->LookupDocID(header.doc_id, &result.document_name) == true);
-        
-        // update rank for document
-        result.rank = header.num_positions;
-        // put queryresult in final list
+    }
+
+    // iterate through doc IDs, make sure that all document IDs that get added to final result exist in
+    // all of the doc ID tables
+    list<DocIDElementHeader> ID_headers_final;
+    for (DocID_t id : doc_IDs) {
+      bool exists_in_all_tables = true;
+      for (DocIDTableReader* doc_id_table : doc_ID_tables) {
+        list<DocPositionOffset_t> dummy;
+        if (!doc_id_table->LookupDocID(id, &dummy)) {
+          exists_in_all_tables = false;
+        }
+      }
+
+      if (exists_in_all_tables) {
+        for (DocIDElementHeader header : ID_headers) {
+          if (header.doc_id == id) {
+            ID_headers_final.push_back(header);
+          }
+        }
+      }
+    }
+
+    // if there were results for this doc id, then we go and
+    // use the data from the headers for the list of queryresults
+    for (DocIDElementHeader header : ID_headers_final) {
+      QueryResult result;
+      bool found_result = false;
+      // convert docID to filename, write to query result
+      doc_table_reader->LookupDocID(header.doc_id, &result.document_name);
+      // update rank for document
+      result.rank = header.num_positions;
+
+      for (QueryResult &res : final_result) {
+        if (res.document_name.compare(result.document_name) == 0) {
+          res.rank += result.rank;
+          found_result = true;
+          break;
+        }
+      }
+
+      if (!found_result) {
+        // add new query result to final list
         final_result.push_back(result);
       }
     }
