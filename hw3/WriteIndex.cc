@@ -300,10 +300,10 @@ static int WriteHashTable(FILE* f, IndexFileOffset_t offset, HashTable* ht,
     // checks if there is no element in this bucket.
     // only write bucket record but no bucket
     if (LinkedList_NumElements(bucket) == 0) {
-      int res = WriteHTBucketRecord(f, record_pos, 0, bucket_pos);
+      WriteHTBucketRecord(f, record_pos, 0, bucket_pos);
     } else {
       // writes bucket record and bucket.
-      int res = WriteHTBucketRecord(f, record_pos,
+      WriteHTBucketRecord(f, record_pos,
       LinkedList_NumElements(bucket), bucket_pos);
       bucket_size = WriteHTBucket(f, bucket_pos, bucket, fn);
     }
