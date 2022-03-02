@@ -76,7 +76,7 @@ int WrappedRead(int fd, unsigned char* buf, int readlen) {
     }
     break;
   }
-  cout << "performed read" << endl;
+  //cout << "performed read" << endl;
   return result;
 }
 
@@ -96,6 +96,6 @@ int WrappedWrite(int fd, unsigned char* buf, int writelen) {
     }
     writebuf += result;
   }
-  cout << "performed write" << endl;
+  //cout << "performed write" << endl;
   return writebuf;
 }

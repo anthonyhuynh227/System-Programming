@@ -50,8 +50,8 @@ int main(int argc, char** argv) {
     if (read_result != write_result) {
       break;
     }
-    close(fd);
-    close(socket_fd);
-    return EXIT_SUCCESS;
   }
+  close(fd);
+  close(socket_fd);
+  return EXIT_SUCCESS;
 }
