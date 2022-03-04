@@ -76,7 +76,25 @@ int Listen(char* portnum, int* sock_family) {
     // try the next address/port returned by getaddrinfo().
     close(listen_fd);
     listen_fd = -1;
+  }
 
+  // Free the structure returned by getaddrinfo().
+  freeaddrinfo(result);
+
+  // If we failed to bind, return failure.
+  if (listen_fd == -1)
+    return listen_fd;
+
+  // Success. Tell the OS that we want this to be a listening socket.
+  if (listen(listen_fd, SOMAXCONN) != 0) {
+    std::cerr << "Failed to mark socket as listening: ";
+    std::cerr << strerror(errno) << std::endl;
+    close(listen_fd);
+    return -1;
+  }
+
+  // Return to the client the listening file descriptor.
+  return listen_fd;
 }
 
 int WrappedRead(int fd, unsigned char* buf, int readlen) {
@@ -112,3 +130,4 @@ int WrappedWrite(int fd, unsigned char* buf, int writelen) {
   }
   return written_so_far;
 }
+

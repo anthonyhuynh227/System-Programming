@@ -11,6 +11,9 @@
 
 #include <iostream>
 
+#include "SocketUtil.h"
+#define BUFSIZE 256
+
 void Usage(char* progname);
 
 // Create a listening socket, accept a connection from a client,
@@ -48,19 +51,19 @@ int main(int argc, char** argv) {
       // Read from the input file, writing to the network socket.
     unsigned char readbuf[BUFSIZE];
     while (1) {
-      int res = WrappedRead(file_fd, readbuf, BUFSIZE);
+      int res = WrappedRead(listen_fd, readbuf, BUFSIZE);
       if (res == 0)  // eof
         break;
       if (res < 0) {  // error
-        close(socket_fd);
-        close(file_fd);
+        close(client_fd);
+        close(listen_fd);
         return EXIT_FAILURE;
       }
 
-      int res2 = WrappedWrite(socket_fd, readbuf, res);
+      int res2 = WrappedWrite(client_fd, readbuf, res);
       if (res2 != res) {  // error
-        close(socket_fd);
-        close(file_fd);
+        close(client_fd);
+        close(listen_fd);
         return EXIT_FAILURE;
       }
     }
