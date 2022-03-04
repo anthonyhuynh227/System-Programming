@@ -1,3 +1,14 @@
+/*
+ * Copyright ©2022 Phuoc Huynh & Isabella Bunnell.  All rights reserved.  Permission is
+ * hereby granted to students registered for University of Washington
+ * CSE 333 for use solely during Winter Quarter 2022 for purposes of
+ * the course.  No other use, copying, distribution, or modification
+ * is permitted without prior written consent. Copyrights for
+ * third-party components of this work must be honored.  Instructors
+ * interested in reusing these course materials should contact the
+ * author.
+ */
+
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -19,7 +30,6 @@ void Usage(char* progname);
 // Create a listening socket, accept a connection from a client,
 // and write all the data the client sends to stdout.
 int main(int argc, char** argv) {
-  // TODO: fill in this main method
   // Expect the port number as a command line argument.
   if (argc != 2) {
     Usage(argv[0]);
@@ -42,15 +52,18 @@ int main(int argc, char** argv) {
                            reinterpret_cast<struct sockaddr*>(&caddr),
                            &caddr_len);
     if (client_fd < 0) {
-      if ((errno == EINTR) || (errno == EAGAIN) || (errno == EWOULDBLOCK))
+      if ((errno == EINTR) || (errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+        std::cerr << "encountered revoverable error" << std::endl;
         continue;
+      }
       std::cerr << "Failure on accept: " << strerror(errno) << std::endl;
       break;
     }
-      // Read from the input file, writing to the std::cout.
+
+      // Read from the input file, writing to the network socket.
     unsigned char readbuf[BUFSIZE];
     while (1) {
-      int res = WrappedRead(client_fd, readbuf, BUFSIZE);
+      int res = WrappedRead(listen_fd, readbuf, BUFSIZE);
       if (res == 0)  // eof
         break;
       if (res < 0) {  // error
@@ -59,10 +72,13 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
       }
 
-      readbuf[res] = '\0';
-      std::cout << " the client sent" << readbuf;
+      int res2 = fwrite(readbuf, 1, res, stdout);
+      if (res2 != res) {  // error
+        close(client_fd);
+        close(listen_fd);
+        return EXIT_FAILURE;
+      }
     }
-    close(client_fd);
   }
 
   // Close up shop.
@@ -74,4 +90,3 @@ void Usage(char* progname) {
   std::cerr << "usage: " << progname << " port" << std::endl;
   exit(EXIT_FAILURE);
 }
-
