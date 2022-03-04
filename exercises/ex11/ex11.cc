@@ -47,11 +47,10 @@ int main(int argc, char** argv) {
       std::cerr << "Failure on accept: " << strerror(errno) << std::endl;
       break;
     }
-
-      // Read from the input file, writing to the network socket.
+      // Read from the input file, writing to the std::cout.
     unsigned char readbuf[BUFSIZE];
     while (1) {
-      int res = WrappedRead(listen_fd, readbuf, BUFSIZE);
+      int res = WrappedRead(client_fd, readbuf, BUFSIZE);
       if (res == 0)  // eof
         break;
       if (res < 0) {  // error
@@ -60,13 +59,10 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
       }
 
-      int res2 = WrappedWrite(client_fd, readbuf, res);
-      if (res2 != res) {  // error
-        close(client_fd);
-        close(listen_fd);
-        return EXIT_FAILURE;
-      }
+      readbuf[res] = '\0';
+      std::cout << " the client sent" << readbuf;
     }
+    close(client_fd);
   }
 
   // Close up shop.
