@@ -20,6 +20,7 @@
 
 using std::cout;
 using std::endl;
+using std::cerr;
 using std::string;
 using std::thread;
 
@@ -27,7 +28,17 @@ static constexpr int kNumSnacks = 6;
 static SimpleQueue queue;
 static unsigned int seed = time(nullptr);
 static pthread_mutex_t write_lock;
+const int NUM_THREADS = 3;
 
+void producer(const string& snack_type);
+void consumer();
+
+void* thread_main(void* arg) {
+  producer("Nian gao");
+  producer("Tangyuan");
+  consumer();
+  return nullptr;  // return type is a pointer
+}
 // Thread safe print that prints the given str on a line
 void thread_safe_print(const string& str) {
   pthread_mutex_lock(&write_lock);
@@ -71,10 +82,20 @@ int main(int argc, char** argv) {
   pthread_mutex_init(&write_lock, nullptr);
   // Your task: Make the two producers and the single consumer
   // all run concurrently (hint: use pthreads)
-  producer("Nian gao");
-  producer("Tangyuan");
-  consumer();
-
+  pthread_t thds[NUM_THREADS];  // array of thread ids
+  // create threads to run thread_main()
+  for (int i = 0; i < NUM_THREADS; i++) {
+    if (pthread_create(&thds[i], NULL, &thread_main, nullptr) != 0) {
+      fprintf(stderr, "pthread_create failed\n");
+    }
+  }
+  // wait for all child threads to finish
+  // (children may terminate out of order, but cleans up in order)
+  for (int i = 0; i < NUM_THREADS; i++) {
+    if (pthread_join(thds[i], nullptr) != 0) {
+      cerr << "pthread_join failed" << endl;
+    }
+  }
   pthread_mutex_destroy(&write_lock);
   return EXIT_SUCCESS;
 }
