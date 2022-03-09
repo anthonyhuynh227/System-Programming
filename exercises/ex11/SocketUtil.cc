@@ -1,3 +1,14 @@
+/*
+ * Copyright ©2022 Phuoc Huynh & Isabella Bunnell.  All rights reserved.  Permission is
+ * hereby granted to students registered for University of Washington
+ * CSE 333 for use solely during Winter Quarter 2022 for purposes of
+ * the course.  No other use, copying, distribution, or modification
+ * is permitted without prior written consent. Copyrights for
+ * third-party components of this work must be honored.  Instructors
+ * interested in reusing these course materials should contact the
+ * author.
+ */
+
 #include "SocketUtil.h"
 
 #include <stdio.h>
@@ -12,7 +23,6 @@ using std::endl;
 
 
 int Listen(char* portnum, int* sock_family) {
-  // TODO: fill in this function
   // Populate the "hints" addrinfo structure for getaddrinfo().
   // ("man addrinfo")
   struct addrinfo hints;
@@ -66,7 +76,6 @@ int Listen(char* portnum, int* sock_family) {
     // Try binding the socket to the address and port number returned
     // by getaddrinfo().
     if (bind(listen_fd, rp->ai_addr, rp->ai_addrlen) == 0) {
-
       // Return to the caller the address family.
       *sock_family = rp->ai_family;
       break;
@@ -98,8 +107,6 @@ int Listen(char* portnum, int* sock_family) {
 }
 
 int WrappedRead(int fd, unsigned char* buf, int readlen) {
-  // TODO: copy this function from your Exercise 10 submission or from the
-  // released sample solution
   int res;
   while (1) {
     res = read(fd, buf, readlen);
@@ -113,8 +120,6 @@ int WrappedRead(int fd, unsigned char* buf, int readlen) {
 }
 
 int WrappedWrite(int fd, unsigned char* buf, int writelen) {
-  // TODO: copy this function from your Exercise 10 submission or from the
-  // released sample solution
   int res, written_so_far = 0;
 
   while (written_so_far < writelen) {
