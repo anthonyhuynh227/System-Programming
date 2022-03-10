@@ -101,5 +101,58 @@ static void GetPortAndPath(int argc,
   // - You have at least 1 index, and all indices are readable files
 
   // STEP 1:
+   // check if there are at least four arugments passed in
+  if (argc < 4) {
+    Usage(argv[0]);
+  }
+
+   // check if port number (argv[1]) passed in is reasonable
+  *port = atoi(argv[1]);
+  if (*port < 1024) {
+    cerr << "Port number < 1024 is not reasonable." << endl;
+    Usage(argv[0]);
+  }
+
+  // check if path (argv[2]) passed in is a readable directory
+  struct stat dir_stat;
+  if (stat(argv[2], &dir_stat) == -1) {
+    cerr << argv[2] << " is not readable." << endl;
+    Usage(argv[0]);
+  }
+
+  if (!S_ISDIR(dirstat.st_mode)) {
+    cerr << argv[2] << " is not a directory." << endl;
+    Usage(argv[0]);
+  }
+
+  *path = (string) argv[2];
+
+  // check the rest of the command line arguments to see
+  // if there is at least one readable index file
+  for (int i = 3; i < argc; i++) {
+    string file_name = (string) argv[i];
+    if (file_name.length() >= 4 && file_name.substr(file_name.length() - 4) == ".idx") {
+      struct stat file_stat;
+      if (stat(argv[i], &file_stat) == -1) {
+        cerr << argv[i] << " is not readable." << endl;
+        Usage(argv[0]);
+      }
+
+      if (!S_ISREG(file_stat.st_mode)) {
+        cerr << argv[i] << " is not a regular file." << endl;
+        Usage(argv[0]);
+      }
+
+      indices->push_back(argv[i]);
+    }
+  }
+
+  // invoke Usage to exit if there is no readable index file passed in
+  if (indices->size() == 0) {
+    cerr << "Didn't pass in at least one readable index file." << endl;
+    Usage(argv[0]);
+  }
+
+
 }
 
