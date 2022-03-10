@@ -153,7 +153,7 @@ static void HttpServer_ThrFn(ThreadPool::Task* t) {
     }
 
     // close the connection if the client sent "Connection: close\r\n"
-    if (req.headers["connection"] == "close") {
+    if (req.GetHeaderValue("connection") == "close") {
       close(hst->client_fd);
       done = true;
     }
@@ -218,27 +218,23 @@ static HttpResponse ProcessFileRequest(const string& uri,
 
     // set Content-type header based on file name suffix
     if (suffix == ".html" || suffix == ".htm")
-      ret.headers["Content-type"] = "text/html";
+      ret.set_content_type("text/html");
     else if (suffix == ".jpg" || suffix == ".jpeg")
-      ret.headers["Content-type"] = "image/jpeg";
+      ret.set_content_type("image/jpeg");
     else if (suffix == ".png")
-      ret.headers["Content-type"] = "image/png";
+      ret.set_content_type("image/png");
     else if (suffix == ".xml")
-      ret.headers["Content-type"] = "text/xml";
-    else if (suffix == ".csv")
-      ret.headers["Content-type"] = "text/csv";
+      ret.set_content_type("text/xml");
     else if (suffix == ".css")
-      ret.headers["Content-type"] = "text/css";
+      ret.set_content_type("text/css");
     else if (suffix == ".js")
-      ret.headers["Content-type"] = "text/javascript";
+      ret.set_content_type("text/javascript");
     else if (suffix == ".txt" || suffix == ".")
-      ret.headers["Content-type"] = "text/plain";
+      ret.set_content_type("text/plain");
     else if (suffix == ".gif")
-      ret.headers["Content-type"] = "image/gif";
-    else if (suffix == ".tiff")
-      ret.headers["Content-type"] = "image/tiff";
+      ret.set_content_type("image/gif");
     else
-      ret.headers["Content-type"] = "application/octet-stream";
+      ret.set_content_type("application/octet-stream");
 
     // set the response protocol, response code, and message
     ret.set_protocol("HTTP/1.1");
@@ -285,7 +281,7 @@ static HttpResponse ProcessQueryRequest(const string& uri,
   //    tags!)
 
   // STEP 3:
-  
+
 
   return ret;
 }
