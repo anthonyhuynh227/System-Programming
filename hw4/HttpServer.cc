@@ -134,8 +134,29 @@ static void HttpServer_ThrFn(ThreadPool::Task* t) {
 
   // STEP 1:
   bool done = false;
+  HttpConnection hc(hst->client_fd);
   while (!done) {
-    done = true;  // you may want to change this value
+    // get the next request
+    HttpRequest req;
+    if (!hc.GetNextRequest(&req)) {
+      close(hst->client_fd);
+      done = true;
+    }
+
+    // process the request
+    HttpResponse rep = ProcessRequest(req, hst->basedir, hst->indices);
+
+    // write the response
+    if (!hc.WriteResponse(rep)) {
+      close(hst->client_fd);
+      done = true;
+    }
+
+    // close the connection if the client sent "Connection: close\r\n"
+    if (req.headers["connection"] == "close") {
+      close(hst->client_fd);
+      done = true;
+    }
   }
 }
 
@@ -181,6 +202,51 @@ static HttpResponse ProcessFileRequest(const string& uri,
   string file_name = "";
 
   // STEP 2:
+  // parse uri to get file name
+  URLParser p;
+  p.Parse(uri);
+  file_name += p.get_path();
+
+  // get rid of /static/ in file name
+  file_name = file_name.replace(0, 8, "");
+  FileReader fr(base_dir, file_name);
+
+  if (fr.ReadFile(&ret.body)) {
+    // get the file name suffix
+    size_t dot_pos = file_name.rfind(".");
+    string suffix = file_name.substr(dot_pos, file_name.length() - 1);
+
+    // set Content-type header based on file name suffix
+    if (suffix == ".html" || suffix == ".htm")
+      ret.headers["Content-type"] = "text/html";
+    else if (suffix == ".jpg" || suffix == ".jpeg")
+      ret.headers["Content-type"] = "image/jpeg";
+    else if (suffix == ".png")
+      ret.headers["Content-type"] = "image/png";
+    else if (suffix == ".xml")
+      ret.headers["Content-type"] = "text/xml";
+    else if (suffix == ".csv")
+      ret.headers["Content-type"] = "text/csv";
+    else if (suffix == ".css")
+      ret.headers["Content-type"] = "text/css";
+    else if (suffix == ".js")
+      ret.headers["Content-type"] = "text/javascript";
+    else if (suffix == ".txt" || suffix == ".")
+      ret.headers["Content-type"] = "text/plain";
+    else if (suffix == ".gif")
+      ret.headers["Content-type"] = "image/gif";
+    else if (suffix == ".tiff")
+      ret.headers["Content-type"] = "image/tiff";
+    else
+      ret.headers["Content-type"] = "application/octet-stream";
+
+    // set the response protocol, response code, and message
+    ret.set_protocol("HTTP/1.1");
+    ret.set_response_code(200);
+    ret.set_message("OK");
+    return ret;
+  }
+
 
 
   // If you couldn't find the file, return an HTTP 404 error.
@@ -219,6 +285,7 @@ static HttpResponse ProcessQueryRequest(const string& uri,
   //    tags!)
 
   // STEP 3:
+  
 
   return ret;
 }
