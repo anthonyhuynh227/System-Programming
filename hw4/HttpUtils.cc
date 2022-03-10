@@ -53,7 +53,20 @@ bool IsPathSafe(const string& root_dir, const string& test_file) {
   // path of a file.)
 
   // STEP 1
-
+  // use realpath to get absolute path of a file
+  char rootpathbuffer[PATH_MAX], testfilebuffer[PATH_MAX];
+  if (!realpath(root_dir.c_str(), rootpathbuffer))
+    return false;
+  if (!realpath(test_file.c_str(), testfilebuffer))
+    return false;
+  // make sure that test_file is longer than root_dir
+  if (strlen(testfilebuffer) <= strlen(rootpathbuffer))
+    return false;
+  // make sure that root_dir is the prefix of test_file
+  if (strncmp(rootpathbuffer,
+              testfilebuffer,
+              strlen(rootpathbuffer)) != 0)
+    return false;
 
   return true;  // You may want to change this.
 }
@@ -69,7 +82,11 @@ string EscapeHtml(const string& from) {
   // looked up online.
 
   // STEP 2
-
+  replace_all(ret, "&",  "&amp;");
+  replace_all(ret, "\"", "&quot;");
+  replace_all(ret, "\'", "&#039;");
+  replace_all(ret, "<",  "&lt;");
+  replace_all(ret, ">",  "&gt;");
 
   return ret;
 }
