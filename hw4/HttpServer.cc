@@ -32,6 +32,13 @@ using std::map;
 using std::string;
 using std::stringstream;
 using std::unique_ptr;
+using std::vector;
+using boost::trim;
+using boost::to_lower;
+using boost::split;
+using boost::is_any_of;
+using boost::token_compress_on;
+using namespace hw3;
 
 namespace hw4 {
 ///////////////////////////////////////////////////////////////////////////////
@@ -144,7 +151,7 @@ static void HttpServer_ThrFn(ThreadPool::Task* t) {
     }
 
     // process the request
-    HttpResponse rep = ProcessRequest(req, hst->basedir, hst->indices);
+    HttpResponse rep = ProcessRequest(req, hst->base_dir, *(hst-> indices));
 
     // write the response
     if (!hc.WriteResponse(rep)) {
@@ -205,13 +212,14 @@ static HttpResponse ProcessFileRequest(const string& uri,
   // parse uri to get file name
   URLParser p;
   p.Parse(uri);
-  file_name += p.get_path();
+  file_name += p.path();
 
   // get rid of /static/ in file name
   file_name = file_name.replace(0, 8, "");
   FileReader fr(base_dir, file_name);
-
-  if (fr.ReadFile(&ret.body)) {
+  string contents;
+  if (fr.ReadFile(&contents)) {
+    ret.AppendToBody(contents);
     // get the file name suffix
     size_t dot_pos = file_name.rfind(".");
     string suffix = file_name.substr(dot_pos, file_name.length() - 1);
@@ -281,8 +289,77 @@ static HttpResponse ProcessQueryRequest(const string& uri,
   //    tags!)
 
   // STEP 3:
+  // 333gle logo and search box/button
+  ret.AppendToBody(kThreegleStr);
 
+  // parse the uri to get query and convert the query to lower case
+  URLParser par;
+  par.Parse(uri);
+  string query = par.args()["terms"];
+  trim(query);
+  to_lower(query);
 
+  // display the rearch results if the user typed in search query
+  if (uri.find("query?terms=") != string::npos) {
+    // split the query string into query words
+    vector<string> qvec;
+    split(qvec, query, is_any_of(" "), token_compress_on);
+
+    // construct a QueryProcessor to answer query
+    QueryProcessor qp(indices, false);
+
+    // search for the matched documents
+    vector<QueryProcessor::QueryResult> qr = qp.ProcessQuery(qvec);
+
+    if (qr.size() == 0) {
+      // no matched documents found
+      ret.AppendToBody("<p><br>\r\n");
+      ret.AppendToBody("No results found for <b>");
+      ret.AppendToBody(EscapeHtml(query));
+      ret.AppendToBody("</b>\r\n");
+      ret.AppendToBody("<p>\r\n");
+      ret.AppendToBody("\r\n");
+    } else {
+      // display the number of results found
+      stringstream ss;
+      ret.AppendToBody("<p><br>\r\n");
+      ss << qr.size();
+      ret.AppendToBody(ss.str());
+      ss.str("");
+      ret.AppendToBody((qr.size() == 1) ? " result " : " results ");
+      ret.AppendToBody("found for <b>");
+      ret.AppendToBody(EscapeHtml(query));
+      ret.AppendToBody("</b>\r\n");
+      ret.AppendToBody("<p>\r\n\r\n");
+
+      // display each matched document with hyperlink
+      ret.AppendToBody("<ul>\r\n");
+      for (uint32_t i = 0; i < qr.size(); i++) {
+        ret.AppendToBody(" <li> <a href=\"");
+        if (qr[i].document_name.substr(0, 7) != "http://")
+          ret.AppendToBody("/static/"
+                  + qr[i].document_name
+                  + "\">"
+                  + EscapeHtml(qr[i].document_name)
+                  + "</a>"
+                  + " [");
+        ss << qr[i].rank;
+        ret.AppendToBody(ss.str());
+        ss.str("");
+        ret.AppendToBody("]<br>\r\n");
+      }
+      ret.AppendToBody("</ul>\r\n");
+    }
+  }
+
+  // the end of the response body
+  ret.AppendToBody("</body>\r\n"); 
+  ret.AppendToBody("</html>\r\n");
+
+  // set the response protocol, response code, and message
+  ret.set_protocol("HTTP/1.1");
+  ret.set_response_code(200);
+  ret.set_message("OK");
   return ret;
 }
 

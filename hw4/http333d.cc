@@ -120,7 +120,7 @@ static void GetPortAndPath(int argc,
     Usage(argv[0]);
   }
 
-  if (!S_ISDIR(dirstat.st_mode)) {
+  if (!S_ISDIR(dir_stat.st_mode)) {
     cerr << argv[2] << " is not a directory." << endl;
     Usage(argv[0]);
   }
