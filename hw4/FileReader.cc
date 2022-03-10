@@ -44,9 +44,33 @@ bool FileReader::ReadFile(string* const contents) {
   // deleter to automatically manage this for you; see the comment in
   // HttpUtils.h above the MallocDeleter class for details.
 
+  // Return false if:
+  // 1. The file could not be found or opened
+  // 2. The file exists above the basedir in the file system hierarchy (e.g.,
+  //    filename is "../../../escape.html")
+
   // STEP 1:
 
+  // false cond 2
+  if (!IsPathSafe(basedir_, full_file)) {
+    return false;
+  }
 
+  int file_size;
+  char* file_str = ReadFileToString(full_file.c_str(), &file_size);
+
+  // false cond 1
+  if (file_str == NULL) {
+    return false;
+  }
+
+  // output param
+  *contents = string(file_str, file_size);
+  
+  // The caller is responsible for freeing the returned pointer
+  // in ReadFileToString
+  free(file_str);
+  
   return true;
 }
 
