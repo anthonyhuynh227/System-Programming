@@ -59,6 +59,7 @@ bool IsPathSafe(const string& root_dir, const string& test_file) {
     return false;
   if (!realpath(test_file.c_str(), testfilebuffer))
     return false;
+
   // make sure that test_file is longer than root_dir
   if (strlen(testfilebuffer) <= strlen(rootpathbuffer))
     return false;
@@ -66,6 +67,9 @@ bool IsPathSafe(const string& root_dir, const string& test_file) {
   if (strncmp(rootpathbuffer,
               testfilebuffer,
               strlen(rootpathbuffer)) != 0)
+    return false;
+  // make sure that root_dir is the exactly directory to test_file.
+  if (testfilebuffer[strlen(rootpathbuffer)] != '/')
     return false;
 
   return true;  // You may want to change this.
@@ -84,7 +88,7 @@ string EscapeHtml(const string& from) {
   // STEP 2
   replace_all(ret, "&",  "&amp;");
   replace_all(ret, "\"", "&quot;");
-  replace_all(ret, "\'", "&#039;");
+  replace_all(ret, "\'", "&apos;");
   replace_all(ret, "<",  "&lt;");
   replace_all(ret, ">",  "&gt;");
 
