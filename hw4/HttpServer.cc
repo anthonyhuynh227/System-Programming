@@ -210,15 +210,15 @@ static HttpResponse ProcessFileRequest(const string& uri,
 
   // STEP 2:
   // parse uri to get file name
-  URLParser p;
-  p.Parse(uri);
-  file_name += p.path();
+  URLParser par;
+  par.Parse(uri);
+  file_name += par.path();
 
   // get rid of /static/ in file name
   file_name = file_name.replace(0, 8, "");
-  FileReader fr(base_dir, file_name);
+  FileReader file_reader(base_dir, file_name);
   string contents;
-  if (fr.ReadFile(&contents)) {
+  if (file_reader.ReadFile(&contents)) {
     ret.AppendToBody(contents);
     // get the file name suffix
     size_t dot_pos = file_name.rfind(".");
@@ -241,6 +241,10 @@ static HttpResponse ProcessFileRequest(const string& uri,
       ret.set_content_type("text/plain");
     else if (suffix == ".gif")
       ret.set_content_type("image/gif");
+    else if (suffix == ".csv")
+      ret.set_content_type("text/csv");
+    else if (suffix == ".tiff")
+      ret.set_content_type("image/tiff");
     else
       ret.set_content_type("application/octet-stream");
 
@@ -306,10 +310,10 @@ static HttpResponse ProcessQueryRequest(const string& uri,
     split(qvec, query, is_any_of(" "), token_compress_on);
 
     // construct a QueryProcessor to answer query
-    QueryProcessor qp(indices, false);
+    QueryProcessor query_pro(indices, false);
 
     // search for the matched documents
-    vector<QueryProcessor::QueryResult> qr = qp.ProcessQuery(qvec);
+    vector<QueryProcessor::QueryResult> qr = query_pro.ProcessQuery(qvec);
 
     if (qr.size() == 0) {
       // no matched documents found
@@ -336,13 +340,14 @@ static HttpResponse ProcessQueryRequest(const string& uri,
       ret.AppendToBody("<ul>\r\n");
       for (uint32_t i = 0; i < qr.size(); i++) {
         ret.AppendToBody(" <li> <a href=\"");
-        if (qr[i].document_name.substr(0, 7) != "http://")
-          ret.AppendToBody("/static/"
-                  + qr[i].document_name
-                  + "\">"
-                  + EscapeHtml(qr[i].document_name)
-                  + "</a>"
-                  + " [");
+        if (qr[i].document_name.substr(0, 7) != "http://") {
+          ret.AppendToBody("/static/");
+        }
+        ret.AppendToBody(qr[i].document_name);
+        ret.AppendToBody("\">");
+        ret.AppendToBody(EscapeHtml(qr[i].document_name));
+        ret.AppendToBody("</a>");
+        ret.AppendToBody(" [");
         ss << qr[i].rank;
         ret.AppendToBody(ss.str());
         ss.str("");
