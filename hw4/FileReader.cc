@@ -66,11 +66,10 @@ bool FileReader::ReadFile(string* const contents) {
 
   // output param
   *contents = string(file_str, file_size);
-  
   // The caller is responsible for freeing the returned pointer
   // in ReadFileToString
   free(file_str);
-  
+
   return true;
 }
 

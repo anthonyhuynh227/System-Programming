@@ -63,7 +63,7 @@ bool HttpConnection::GetNextRequest(HttpRequest* const request) {
     int res;
     while (1) {
       res = WrappedRead(fd_, buf, BUFSIZE);
-      if (res == 0) { // connection closed
+      if (res == 0) {  // connection closed
         break;
       }
       if (res < 0) {  // error
@@ -85,7 +85,7 @@ bool HttpConnection::GetNextRequest(HttpRequest* const request) {
     return false;
 
   // put header into output param
-  *request = ParseRequest(buffer_.substr(0,found + kHeaderEndLen));
+  *request = ParseRequest(buffer_.substr(0, found + kHeaderEndLen));
 
   // return false if the request is not well-formatted
   if ((*request).uri() == "BAD_") {
@@ -94,7 +94,7 @@ bool HttpConnection::GetNextRequest(HttpRequest* const request) {
 
   // Make sure to save anything you read after "\r\n\r\n" in buffer_
   // for the next time the caller invokes GetNextRequest()
-  
+
   buffer_ = buffer_.substr(found + kHeaderEndLen);
 
   return true;  // You may want to change this.
@@ -153,13 +153,13 @@ HttpRequest HttpConnection::ParseRequest(const string& request) const {
   // check the format the first line
   if (fst_line.size() == 0) {
     // we get default: GET/ HTTP/ 1.1
-  }  else if ( fst_line[0] != "GET") {
+  }  else if (fst_line[0] != "GET") {
     // check if the first line of the request is GET
     req.set_uri("BAD_");
     return req;
   } else if (fst_line.size() == 2) {
-    // if the first line has 2 tokens, it should be either 
-    // GET [URI] \r\n or GET HTTP/ 
+    // if the first line has 2 tokens, it should be either
+    // GET [URI] \r\n or GET HTTP/
     if (fst_line[0] != "GET" ||
         (fst_line[1][0] != '/' &&
          fst_line[1].find("HTTP/") == string::npos)) {
@@ -167,7 +167,7 @@ HttpRequest HttpConnection::ParseRequest(const string& request) const {
       return req;
     }
   } else if (fst_line.size() == 3) {
-    // if the first line has 3 tokens, it should be 
+    // if the first line has 3 tokens, it should be
     // in format GET [URI] HTTP/..., otherwise, it's not correct formatted.
     if (fst_line[0] != "GET" ||
         fst_line[1][0] != '/' ||
@@ -198,7 +198,6 @@ HttpRequest HttpConnection::ParseRequest(const string& request) const {
     to_lower(header_name);
     string header_value = lines[i].substr(col +2);
     req.AddHeader(header_name, header_value);
-
   }
 
   return req;

@@ -101,12 +101,12 @@ static void GetPortAndPath(int argc,
   // - You have at least 1 index, and all indices are readable files
 
   // STEP 1:
-   // check if there are at least four arugments passed in
+  // check if there are at least four arugments passed in
   if (argc < 4) {
     Usage(argv[0]);
   }
 
-   // check if port number (argv[1]) passed in is reasonable
+  // check if port number (argv[1]) passed in is reasonable
   *port = atoi(argv[1]);
   if (*port < 1024) {
     cerr << "Port number < 1024 is not reasonable." << endl;
@@ -125,21 +125,14 @@ static void GetPortAndPath(int argc,
     Usage(argv[0]);
   }
 
-<<<<<<< HEAD
   *path = string(argv[2]);
-=======
-  *path = string (argv[2]);
->>>>>>> 50fd3d3224ac084daae3f9a9bfa86b3ccf79d41b
 
   // check the rest of the command line arguments to see
   // if there is at least one readable index file
   for (int i = 3; i < argc; i++) {
-<<<<<<< HEAD
     string file_name = string(argv[i]);
-=======
-    string file_name = string (argv[i]);
->>>>>>> 50fd3d3224ac084daae3f9a9bfa86b3ccf79d41b
-    if (file_name.length() >= 4 && file_name.substr(file_name.length() - 4) == ".idx") {
+    if (file_name.length() >= 4 &&
+            file_name.substr(file_name.length() - 4) == ".idx") {
       struct stat file_stat;
       if (stat(argv[i], &file_stat) == -1) {
         cerr << argv[i] << " is not readable." << endl;
@@ -160,7 +153,4 @@ static void GetPortAndPath(int argc,
     cerr << "Didn't pass in at least one readable index file." << endl;
     Usage(argv[0]);
   }
-
-
 }
-
