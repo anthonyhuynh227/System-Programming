@@ -172,7 +172,7 @@ HttpRequest HttpConnection::ParseRequest(const string& request) const {
     req.set_uri(fst_line[1]);
   } else {
     // if number of tokens in the first line is not 2 or 3,
-    // then the request is not in correct formatted.
+    // then the request is not well-formatted.
     req.set_uri("BAD_");
     return req;
   }
