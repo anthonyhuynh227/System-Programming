@@ -23,7 +23,11 @@
 using std::map;
 using std::string;
 using std::vector;
-
+using boost::split;
+using boost::token_compress_on;
+using boost::is_any_of;
+using boost::trim;
+using boost::to_lower;
 #define BUFSIZE 1024
 
 namespace hw4 {
@@ -49,15 +53,16 @@ bool HttpConnection::GetNextRequest(HttpRequest* const request) {
   // next time the caller invokes GetNextRequest()!
 
   // STEP 1:
-  size_t found = buffer_.find("\r\n\r\n");
+  size_t found = buffer_.find(kHeaderEnd);
   // if end of request header not in this request...
   if (found == string::npos) {
     // perform wrapped read
 
     // Loop, reading data from client_fd and writing it to stdout.
+    unsigned char buf[BUFSIZE];
+    int res;
     while (1) {
-      unsigned char buf[BUFSIZE];
-      int res = WrappedRead(fd_, buf, BUFSIZE);
+      res = WrappedRead(fd_, buf, BUFSIZE);
       if (res == 0) { // connection closed
         break;
       }
@@ -65,11 +70,11 @@ bool HttpConnection::GetNextRequest(HttpRequest* const request) {
         return false;
       }
       // append read to buffer
-      buffer_ += string(reinterpret_cast<char*>(buf), res));
+      buffer_ += string(reinterpret_cast<char*>(buf), res);
 
       // check buffer to see if "\r\n\r\n" is there
       // if it is then stop reading
-      found = buffer_.find("\r\n\r\n");
+      found = buffer_.find(kHeaderEnd);
       if (found != string::npos) {
         break;
       }
@@ -77,8 +82,14 @@ bool HttpConnection::GetNextRequest(HttpRequest* const request) {
   }
 
   // put header into output param
+  *request = ParseRequest(buffer_.substr(0,found + kHeaderEndLen));
 
   // take out everything after "\r\n\r\n"
+
+  // Make sure to save anything you read after "\r\n\r\n" in buffer_
+  // for the next time the caller invokes GetNextRequest()
+  
+  buffer_ = buffer_.substr(found + kHeaderEndLen);
 
   return true;  // You may want to change this.
 }
@@ -113,7 +124,76 @@ HttpRequest HttpConnection::ParseRequest(const string& request) const {
   // Note: If a header is malformed, skip that line.
 
   // STEP 2:
+  // split the request into different lines (split on "\r\n").
+  vector<string> lines;
+  split(lines, request, is_any_of("\r\n"),
+                      token_compress_on);
+  // check if request is in correct form with \r\n
+  if (lines.size() < 2) {
+    req.set_uri("BAD_");
+    return req;
+  }
 
+  // trimming whitespace from the end of each line
+  for (size_t i = 0; i < lines.size(); i++) {
+    trim(lines[i]);
+  }
+
+  // split first line into tokens on " "
+  vector<string> fst_line;
+  split(fst_line, lines[0], is_any_of(" "),
+                  token_compress_on);
+
+  // check the format the first line
+  if (fst_line.size() == 0) {
+    // we get default: GET/ HTTP/ 1.1
+  }  else if ( fst_line[0] != "GET") {
+    // check if the first line of the request is GET
+    req.set_uri("BAD_");
+    return req;
+  } else if (fst_line.size() == 2) {
+    // if the first line has 2 tokens, it should be either 
+    // GET [URI] \r\n or GET HTTP/ 
+    if (fst_line[0] != "GET" ||
+        (fst_line[1][0] != '/' &&
+         fst_line[1].find("HTTP/") == string::npos)) {
+      req.set_uri("BAD_");
+      return req;
+    }
+  } else if (fst_line.size() == 3) {
+    // if the first line has 3 tokens, it should be 
+    // in format GET [URI] HTTP/..., otherwise, it's not correct formatted.
+    if (fst_line[0] != "GET" ||
+        fst_line[1][0] != '/' ||
+        fst_line[2].find("HTTP/") == string::npos) {
+      req.set_uri("BAD_");
+      return req;
+    }
+    req.set_uri(fst_line[1]);
+  } else {
+    // if number of tokens in the first line is not 2 or 3,
+    // then the request is not in correct formatted.
+    req.set_uri("BAD_");
+    return req;
+  }
+
+  // split the rest of the lines in the request into header name and value.
+  for (size_t i = 1; i < lines.size() -1; i++) {
+    size_t col = lines[i].find(": ");
+
+    // check if each line is in correct format
+    if (col == string::npos) {
+      req.set_uri("BAD_");
+      return req;
+    }
+
+    // convert headername to lowercase and store them in req.header_
+    string header_name = lines[i].substr(0, col);
+    to_lower(header_name);
+    string header_value = lines[i].substr(col +2);
+    req.AddHeader(header_name, header_value);
+
+  }
 
   return req;
 }
