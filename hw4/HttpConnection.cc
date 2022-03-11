@@ -49,7 +49,7 @@ bool HttpConnection::GetNextRequest(HttpRequest* const request) {
   // next time the caller invokes GetNextRequest()!
 
   // STEP 1:
-  size_t found = buffer_.find("\r\n\r\n");
+  size_t found = buffer_.find(kHeaderEnd);
   // if end of request header not in this request...
   if (found == string::npos) {
     // perform wrapped read
@@ -65,22 +65,26 @@ bool HttpConnection::GetNextRequest(HttpRequest* const request) {
         return false;
       }
       // append read to buffer
-      buffer_ += string(reinterpret_cast<char*>(buf), res));
+      buffer_ += string(reinterpret_cast<char*>(buf), res);
 
       // check buffer to see if "\r\n\r\n" is there
       // if it is then stop reading
-      found = buffer_.find("\r\n\r\n");
+      found = buffer_.find(kHeaderEnd);
       if (found != string::npos) {
         break;
       }
     }
   }
 
-  // put header into output param
+  // After reading complete request header, use ParseRequest() to parse into
+  // an HttpRequest and save to the output parameter request.
+  *request = ParseRequest(buffer_);
 
-  // take out everything after "\r\n\r\n"
+  // Make sure to save anything you read after "\r\n\r\n" in buffer_ for the
+  // next time the caller invokes GetNextRequest()!
+  buffer_ = buffer_.substr(found + kHeaderEndLen);
 
-  return true;  // You may want to change this.
+  return true;
 }
 
 bool HttpConnection::WriteResponse(const HttpResponse& response) const {
