@@ -125,12 +125,20 @@ static void GetPortAndPath(int argc,
     Usage(argv[0]);
   }
 
+<<<<<<< HEAD
   *path = string(argv[2]);
+=======
+  *path = string (argv[2]);
+>>>>>>> 50fd3d3224ac084daae3f9a9bfa86b3ccf79d41b
 
   // check the rest of the command line arguments to see
   // if there is at least one readable index file
   for (int i = 3; i < argc; i++) {
+<<<<<<< HEAD
     string file_name = string(argv[i]);
+=======
+    string file_name = string (argv[i]);
+>>>>>>> 50fd3d3224ac084daae3f9a9bfa86b3ccf79d41b
     if (file_name.length() >= 4 && file_name.substr(file_name.length() - 4) == ".idx") {
       struct stat file_stat;
       if (stat(argv[i], &file_stat) == -1) {
