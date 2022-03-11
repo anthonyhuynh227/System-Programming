@@ -58,7 +58,7 @@ bool ServerSocket::BindAndListen(int ai_family, int* const listen_fd) {
   // from ex11 sample
   struct addrinfo hints;
   memset(&hints, 0, sizeof(struct addrinfo));
-  
+
   // makes sure that passed in ai_family is ipv4 or ipv6
   if (ai_family != AF_INET && ai_family != AF_INET6) {
     return false;
@@ -87,7 +87,8 @@ bool ServerSocket::BindAndListen(int ai_family, int* const listen_fd) {
   // Loop through the returned address structures until we are able
   // to create a socket and bind to one.  The address structures are
   // linked in a list through the "ai_next" field of result.
-  int l_fd = -1; //listen_fd (but can't name this till end because its a return param)
+  int l_fd = -1;
+  // listen_fd (but can't name this till end because its a return param)
   for (struct addrinfo* rp = result; rp != nullptr; rp = rp->ai_next) {
     l_fd = socket(rp->ai_family,
                   rp->ai_socktype,
@@ -176,16 +177,14 @@ bool ServerSocket::Accept(int* const accepted_fd,
 
   // client params
   // from PrintOut in server_accept_rw_close.cc
-  if (addr->sa_family == AF_INET) { // handle IPv4
-
+  if (addr->sa_family == AF_INET) {  // handle IPv4
     char astring[INET_ADDRSTRLEN];
     struct sockaddr_in* in4 = reinterpret_cast<struct sockaddr_in *>(addr);
     inet_ntop(AF_INET, &(in4->sin_addr), astring, INET_ADDRSTRLEN);
 
     *client_addr = string(astring);
     *client_port = ntohs(in4->sin_port);
-  } else { // handle IPv6
-
+  } else {  // handle IPv6
     char addr_string[INET6_ADDRSTRLEN];
     struct sockaddr_in6 *in6 = reinterpret_cast<struct sockaddr_in6 *>(addr);
     inet_ntop(AF_INET6, &(in6->sin6_addr), addr_string, INET6_ADDRSTRLEN);
@@ -196,7 +195,7 @@ bool ServerSocket::Accept(int* const accepted_fd,
 
   // client DNS params
   // from PrintReverseDNS in server_accept_rw_close.cc
-  char hostname[1024]; // ought to be big enough.
+  char hostname[1024];  // ought to be big enough.
   if (getnameinfo(addr, caddr_len, hostname, 1024, NULL, 0, 0) != 0) {
     return false;
   }

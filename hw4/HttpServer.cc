@@ -38,7 +38,6 @@ using boost::to_lower;
 using boost::split;
 using boost::is_any_of;
 using boost::token_compress_on;
-using namespace hw3;
 
 namespace hw4 {
 ///////////////////////////////////////////////////////////////////////////////
@@ -306,16 +305,17 @@ static HttpResponse ProcessQueryRequest(const string& uri,
   // display the rearch results if the user typed in search query
   if (uri.find("query?terms=") != string::npos) {
     // split the query string into query words
-    vector<string> qvec;
-    split(qvec, query, is_any_of(" "), token_compress_on);
+    vector<string> query_vec;
+    split(query_vec, query, is_any_of(" "), token_compress_on);
 
     // construct a QueryProcessor to answer query
-    QueryProcessor query_pro(indices, false);
+    hw3::QueryProcessor query_pro(indices, false);
 
     // search for the matched documents
-    vector<QueryProcessor::QueryResult> qr = query_pro.ProcessQuery(qvec);
+    vector<hw3::QueryProcessor::QueryResult> query_result
+                          = query_pro.ProcessQuery(query_vec);
 
-    if (qr.size() == 0) {
+    if (query_result.size() == 0) {
       // no matched documents found
       ret.AppendToBody("<p><br>\r\n");
       ret.AppendToBody("No results found for <b>");
@@ -327,10 +327,10 @@ static HttpResponse ProcessQueryRequest(const string& uri,
       // display the number of results found
       stringstream ss;
       ret.AppendToBody("<p><br>\r\n");
-      ss << qr.size();
+      ss << query_result.size();
       ret.AppendToBody(ss.str());
       ss.str("");
-      ret.AppendToBody((qr.size() == 1) ? " result " : " results ");
+      ret.AppendToBody((query_result.size() == 1) ? " result " : " results ");
       ret.AppendToBody("found for <b>");
       ret.AppendToBody(EscapeHtml(query));
       ret.AppendToBody("</b>\r\n");
@@ -338,17 +338,17 @@ static HttpResponse ProcessQueryRequest(const string& uri,
 
       // display each matched document with hyperlink
       ret.AppendToBody("<ul>\r\n");
-      for (uint32_t i = 0; i < qr.size(); i++) {
+      for (uint32_t i = 0; i < query_result.size(); i++) {
         ret.AppendToBody(" <li> <a href=\"");
-        if (qr[i].document_name.substr(0, 7) != "http://") {
+        if (query_result[i].document_name.substr(0, 7) != "http://") {
           ret.AppendToBody("/static/");
         }
-        ret.AppendToBody(qr[i].document_name);
+        ret.AppendToBody(query_result[i].document_name);
         ret.AppendToBody("\">");
-        ret.AppendToBody(EscapeHtml(qr[i].document_name));
+        ret.AppendToBody(EscapeHtml(query_result[i].document_name));
         ret.AppendToBody("</a>");
         ret.AppendToBody(" [");
-        ss << qr[i].rank;
+        ss << query_result[i].rank;
         ret.AppendToBody(ss.str());
         ss.str("");
         ret.AppendToBody("]<br>\r\n");
@@ -358,7 +358,7 @@ static HttpResponse ProcessQueryRequest(const string& uri,
   }
 
   // the end of the response body
-  ret.AppendToBody("</body>\r\n"); 
+  ret.AppendToBody("</body>\r\n");
   ret.AppendToBody("</html>\r\n");
 
   // set the response protocol, response code, and message
