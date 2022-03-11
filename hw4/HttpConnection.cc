@@ -81,13 +81,16 @@ bool HttpConnection::GetNextRequest(HttpRequest* const request) {
     }
   }
 
-  if (found == std::string::npos)
+  if (found == string::npos)
     return false;
 
   // put header into output param
   *request = ParseRequest(buffer_.substr(0,found + kHeaderEndLen));
 
-  // take out everything after "\r\n\r\n"
+  // return false if the request is not well-formatted
+  if ((*request).uri() == "BAD_") {
+    return false;
+  }
 
   // Make sure to save anything you read after "\r\n\r\n" in buffer_
   // for the next time the caller invokes GetNextRequest()
