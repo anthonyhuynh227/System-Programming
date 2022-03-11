@@ -24,6 +24,8 @@ using std::map;
 using std::string;
 using std::vector;
 
+#define BUFSIZE 1024
+
 namespace hw4 {
 
 static const char* kHeaderEnd = "\r\n\r\n";
@@ -47,9 +49,38 @@ bool HttpConnection::GetNextRequest(HttpRequest* const request) {
   // next time the caller invokes GetNextRequest()!
 
   // STEP 1:
+  size_t found = buffer_.find("\r\n\r\n");
+  // if end of request header not in this request...
+  if (found == string::npos) {
+    // perform wrapped read
 
+    // Loop, reading data from client_fd and writing it to stdout.
+    while (1) {
+      unsigned char buf[BUFSIZE];
+      int res = WrappedRead(fd_, buf, BUFSIZE);
+      if (res == 0) { // connection closed
+        break;
+      }
+      if (res < 0) {  // error
+        return false;
+      }
+      // append read to buffer
+      buffer_ += string(reinterpret_cast<char*>(buf), res));
 
-  return false;  // You may want to change this.
+      // check buffer to see if "\r\n\r\n" is there
+      // if it is then stop reading
+      found = buffer_.find("\r\n\r\n");
+      if (found != string::npos) {
+        break;
+      }
+    }
+  }
+
+  // put header into output param
+
+  // take out everything after "\r\n\r\n"
+
+  return true;  // You may want to change this.
 }
 
 bool HttpConnection::WriteResponse(const HttpResponse& response) const {
