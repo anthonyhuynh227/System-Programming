@@ -81,6 +81,9 @@ bool HttpConnection::GetNextRequest(HttpRequest* const request) {
     }
   }
 
+  if (found == std::string::npos)
+    return false;
+
   // put header into output param
   *request = ParseRequest(buffer_.substr(0,found + kHeaderEndLen));
 
