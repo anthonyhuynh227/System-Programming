@@ -112,6 +112,7 @@ bool ServerSocket::BindAndListen(int ai_family, int* const listen_fd) {
     if (bind(l_fd, rp->ai_addr, rp->ai_addrlen) == 0) {
       // Bind worked!  Return to the caller the address family.
       *listen_fd = rp->ai_family;
+      sock_family_ = rp->ai_family;
       break;
     }
 
